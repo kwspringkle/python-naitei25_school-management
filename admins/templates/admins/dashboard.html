@@ -1,0 +1,101 @@
+{% extends 'admins/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Admin Dashboard - School Management" %}{% endblock %}
+
+{% block content %}
+            
+<!-- Welcome Card -->
+<div class="welcome-card">
+    <div class="row align-items-center">
+        <div class="col-md-12">
+            <h2 class="mb-2">
+                {% blocktrans with name=admin_user.get_full_name|default:admin_user.username %}Welcome, {{ name }}!{% endblocktrans %}
+            </h2>
+            <p class="mb-0 opacity-75">{% trans "Manage school system efficiently" %}</p>
+        </div>
+    </div>
+</div>
+            
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-md-6 col-lg-2_4">
+        <div class="stat-card students">
+            <div class="stat-number text-success">{{ total_students }}</div>
+            <div class="stat-label">{% trans "Students" %}</div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-2_4">
+        <div class="stat-card teachers">
+            <div class="stat-number text-primary">{{ total_teachers }}</div>
+            <div class="stat-label">{% trans "Teachers" %}</div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-2_4">
+        <div class="stat-card departments">
+            <div class="stat-number text-warning">{{ total_departments }}</div>
+            <div class="stat-label">{% trans "Departments" %}</div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-2_4">
+        <div class="stat-card subjects">
+            <div class="stat-number text-purple">{{ total_subjects }}</div>
+            <div class="stat-label">{% trans "Subjects" %}</div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-2_4">
+        <div class="stat-card classes">
+            <div class="stat-number text-danger">{{ total_classes }}</div>
+            <div class="stat-label">{% trans "Classes" %}</div>
+        </div>
+    </div>
+</div>
+            
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-lg-8">
+        <div class="action-card">
+            <h4 class="mb-3">
+                {% trans "Quick Actions" %}
+            </h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <button class="action-btn btn-students">
+                        {% trans "Add Student" %}
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="action-btn btn-teachers">
+                        {% trans "Add Teacher" %}
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="action-btn btn-settings">
+                        {% trans "System Settings" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="action-card">
+            <h5 class="mb-3">
+                {% trans "Recent Activities" %}
+            </h5>
+            <div class="text-muted">
+                <p class="mb-2">
+                    • {% trans "System is running normally" %}
+                </p>
+                <p class="mb-2">
+                    • {% trans "Last login" %}: {{ admin_user.last_login|date:date_format }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admins/forms.py:16 admins/forms.py:19
+msgid "Username"
+msgstr "Tên đăng nhập"
+
+#: admins/forms.py:26 admins/forms.py:29
+msgid "Password"
+msgstr "Mật khẩu"
+
+#: admins/forms.py:48
+msgid "Username must be at least 3 characters long."
+msgstr "Tên đăng nhập phải có ít nhất 3 ký tự."
+
+#: admins/forms.py:58
+msgid "Password must be at least 4 characters long."
+msgstr "Mật khẩu phải có ít nhất 4 ký tự."
+
+#: admins/forms.py:78
+msgid "Invalid username or password."
+msgstr "Tên đăng nhập hoặc mật khẩu không đúng."
+
+#: admins/forms.py:81
+msgid "This account is inactive."
+msgstr "Tài khoản này đã bị vô hiệu hóa."
+
+#: admins/forms.py:84
+msgid "You do not have permission to access the admin area."
+msgstr "Bạn không có quyền truy cập vào khu vực quản trị."
+
+#: admins/views.py:35
+msgid "Welcome %(name)s!"
+msgstr "Chào mừng %(name)s!"
+
+#: admins/views.py:57
+msgid "You do not have permission to access this page."
+msgstr "Bạn không có quyền truy cập vào trang này."
+
+#: admins/views.py:84
+msgid "You have been logged out successfully."
+msgstr "Bạn đã đăng xuất thành công."
+
+#: admins/templates/admins/base.html:56
+msgid "Profile Information"
+msgstr "Thông tin cá nhân"
+
+#: admins/templates/admins/base.html:57
+msgid "Settings"
+msgstr "Cài đặt"
+
+#: admins/templates/admins/base.html:59
+msgid "Logout"
+msgstr "Đăng xuất"
+
+#: admins/templates/admins/dashboard.html:4
+msgid "Admin Dashboard - School Management"
+msgstr "Bảng điều khiển Quản trị - Quản lý Trường học"
+
+#: admins/templates/admins/dashboard.html:13
+msgid "Welcome, {{ name }}!"
+msgstr "Chào mừng, {{ name }}!"
+
+#: admins/templates/admins/dashboard.html:15
+msgid "Manage school system efficiently"
+msgstr "Quản lý hệ thống trường học một cách hiệu quả"
+
+#: admins/templates/admins/dashboard.html:25
+msgid "Students"
+msgstr "Học sinh"
+
+#: admins/templates/admins/dashboard.html:32
+msgid "Teachers"
+msgstr "Giáo viên"
+
+#: admins/templates/admins/dashboard.html:39
+msgid "Departments"
+msgstr "Khoa"
+
+#: admins/templates/admins/dashboard.html:46
+msgid "Subjects"
+msgstr "Môn học"
+
+#: admins/templates/admins/dashboard.html:53
+msgid "Classes"
+msgstr "Lớp học"
+
+#: admins/templates/admins/dashboard.html:63
+msgid "Quick Actions"
+msgstr "Thao tác nhanh"
+
+#: admins/templates/admins/dashboard.html:68
+msgid "Add Student"
+msgstr "Thêm học sinh"
+
+#: admins/templates/admins/dashboard.html:73
+msgid "Add Teacher"
+msgstr "Thêm giáo viên"
+
+#: admins/templates/admins/dashboard.html:78
+msgid "System Settings"
+msgstr "Cài đặt hệ thống"
+
+#: admins/templates/admins/dashboard.html:88
+msgid "Recent Activities"
+msgstr "Hoạt động gần đây"
+
+#: admins/templates/admins/dashboard.html:92
+msgid "System is running normally"
+msgstr "Hệ thống đang hoạt động bình thường"
+
+#: admins/templates/admins/dashboard.html:95
+msgid "Last login"
+msgstr "Đăng nhập lần cuối"
+
+#: admins/templates/admins/login.html:8
+msgid "Admin Login - School Management"
+msgstr "Đăng nhập Quản trị - Quản lý Trường học"
+
+#: admins/templates/admins/login.html:23
+msgid "Admin Login"
+msgstr "Đăng nhập Quản trị"
+
+#: admins/templates/admins/login.html:24
+msgid "School Management System"
+msgstr "Hệ thống Quản lý Trường học"
+
+#: admins/templates/admins/login.html:65
+msgid "Login"
+msgstr "Đăng nhập"
+
+#: admins/templates/admins/login.html:70
+msgid "Administrator Area Only"
+msgstr "Khu vực dành riêng cho Quản trị viên"
+
+#: admins/middleware.py:42
+msgid "Please login to access the admin area."
+msgstr "Vui lòng đăng nhập để truy cập khu vực quản trị."
+
+#: admins/middleware.py:46
+msgid "You do not have permission to access the admin area."
+msgstr "Bạn không có quyền truy cập vào khu vực quản trị."

@@ -1,0 +1,158 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admins/forms.py:16 admins/forms.py:19
+msgid "Username"
+msgstr "Username"
+
+#: admins/forms.py:26 admins/forms.py:29
+msgid "Password"
+msgstr "Password"
+
+#: admins/forms.py:48
+msgid "Username must be at least 3 characters long."
+msgstr "Username must be at least 3 characters long."
+
+#: admins/forms.py:58
+msgid "Password must be at least 4 characters long."
+msgstr "Password must be at least 4 characters long."
+
+#: admins/forms.py:78
+msgid "Invalid username or password."
+msgstr "Invalid username or password."
+
+#: admins/forms.py:81
+msgid "This account is inactive."
+msgstr "This account is inactive."
+
+#: admins/forms.py:84
+msgid "You do not have permission to access the admin area."
+msgstr "You do not have permission to access the admin area."
+
+#: admins/views.py:35
+msgid "Welcome %(name)s!"
+msgstr "Welcome %(name)s!"
+
+#: admins/views.py:57
+msgid "You do not have permission to access this page."
+msgstr "You do not have permission to access this page."
+
+#: admins/views.py:84
+msgid "You have been logged out successfully."
+msgstr "You have been logged out successfully."
+
+#: admins/templates/admins/base.html:56
+msgid "Profile Information"
+msgstr "Profile Information"
+
+#: admins/templates/admins/base.html:57
+msgid "Settings"
+msgstr "Settings"
+
+#: admins/templates/admins/base.html:59
+msgid "Logout"
+msgstr "Logout"
+
+#: admins/templates/admins/dashboard.html:4
+msgid "Admin Dashboard - School Management"
+msgstr "Admin Dashboard - School Management"
+
+#: admins/templates/admins/dashboard.html:13
+msgid "Welcome, {{ name }}!"
+msgstr "Welcome, {{ name }}!"
+
+#: admins/templates/admins/dashboard.html:15
+msgid "Manage school system efficiently"
+msgstr "Manage school system efficiently"
+
+#: admins/templates/admins/dashboard.html:25
+msgid "Students"
+msgstr "Students"
+
+#: admins/templates/admins/dashboard.html:32
+msgid "Teachers"
+msgstr "Teachers"
+
+#: admins/templates/admins/dashboard.html:39
+msgid "Departments"
+msgstr "Departments"
+
+#: admins/templates/admins/dashboard.html:46
+msgid "Subjects"
+msgstr "Subjects"
+
+#: admins/templates/admins/dashboard.html:53
+msgid "Classes"
+msgstr "Classes"
+
+#: admins/templates/admins/dashboard.html:63
+msgid "Quick Actions"
+msgstr "Quick Actions"
+
+#: admins/templates/admins/dashboard.html:68
+msgid "Add Student"
+msgstr "Add Student"
+
+#: admins/templates/admins/dashboard.html:73
+msgid "Add Teacher"
+msgstr "Add Teacher"
+
+#: admins/templates/admins/dashboard.html:78
+msgid "System Settings"
+msgstr "System Settings"
+
+#: admins/templates/admins/dashboard.html:88
+msgid "Recent Activities"
+msgstr "Recent Activities"
+
+#: admins/templates/admins/dashboard.html:92
+msgid "System is running normally"
+msgstr "System is running normally"
+
+#: admins/templates/admins/dashboard.html:95
+msgid "Last login"
+msgstr "Last login"
+
+#: admins/templates/admins/login.html:8
+msgid "Admin Login - School Management"
+msgstr "Admin Login - School Management"
+
+#: admins/templates/admins/login.html:23
+msgid "Admin Login"
+msgstr "Admin Login"
+
+#: admins/templates/admins/login.html:24
+msgid "School Management System"
+msgstr "School Management System"
+
+#: admins/templates/admins/login.html:65
+msgid "Login"
+msgstr "Login"
+
+#: admins/templates/admins/login.html:70
+msgid "Administrator Area Only"
+msgstr "Administrator Area Only"
+
+#: admins/middleware.py:42
+msgid "Please login to access the admin area."
+msgstr "Please login to access the admin area."
+
+#: admins/middleware.py:46
+msgid "You do not have permission to access the admin area."
+msgstr "You do not have permission to access the admin area."

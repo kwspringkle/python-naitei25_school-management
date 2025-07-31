@@ -145,6 +145,13 @@ FIRST_CHOICE_INDEX = 0  # Index for first choice in choices tuple
 DEFAULT_MANY_TO_MANY_ID = 1  # Default ID for ManyToManyField (legacy comment)
 
 # =============================================================================
+# DATE FORMAT CONSTANTS
+# =============================================================================
+ADMIN_DATETIME_FORMAT = "d/m/Y H:i"  # Format for displaying dates in admin interface
+ADMIN_DATE_FORMAT = "d/m/Y"  # Format for displaying dates only
+ADMIN_TIME_FORMAT = "H:i"  # Format for displaying time only
+
+# =============================================================================
 # DATABASE CONSTRAINTS
 # =============================================================================
 # Note: ON_DELETE_RESTRICT will be imported from django.db.models.RESTRICT

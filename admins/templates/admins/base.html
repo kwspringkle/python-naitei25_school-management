@@ -1,0 +1,87 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard - School Management{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'admins/css/bootstrap-minimal.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'admins/css/admin-custom.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'admin_dashboard' %}">
+                {% block brand_name %}School Management{% endblock %}
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <!-- Language Switcher -->
+                <div class="nav-item dropdown me-3">
+                    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
+                        {% get_current_language as LANGUAGE_CODE %}
+                        {% if LANGUAGE_CODE == 'vi' %}🇻🇳 Tiếng Việt{% else %}🇺🇸 English{% endif %}
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% get_current_language as LANGUAGE_CODE %}
+                        {% get_available_languages as LANGUAGES %}
+                        {% get_language_info_list for LANGUAGES as languages %}
+                        {% for language in languages %}
+                            <li>
+                                <form action="{% url 'set_language' %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input name="next" type="hidden" value="{{ redirect_to }}" />
+                                    <input name="language" type="hidden" value="{{ language.code }}" />
+                                    <button type="submit" class="dropdown-item {% if language.code == LANGUAGE_CODE %}active{% endif %}">
+                                        {% if language.code == 'vi' %}🇻🇳 Tiếng Việt{% else %}🇺🇸 English{% endif %}
+                                    </button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        {{ admin_user.get_full_name|default:admin_user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">{% trans "Profile Information" %}</a></li>
+                        <li><a class="dropdown-item" href="#">{% trans "Settings" %}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_logout' %}">{% trans "Logout" %}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="dashboard-container">
+        <div class="container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="{% static 'admins/js/bootstrap-minimal.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
