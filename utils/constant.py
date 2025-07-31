@@ -152,6 +152,64 @@ ADMIN_DATE_FORMAT = "d/m/Y"  # Format for displaying dates only
 ADMIN_TIME_FORMAT = "H:i"  # Format for displaying time only
 
 # =============================================================================
+# ADMIN FORMS CONSTANTS
+# =============================================================================
+
+# Form field length constants
+ADMIN_USERNAME_MAX_LENGTH = 150
+ADMIN_USERNAME_MIN_LENGTH = 8
+ADMIN_PASSWORD_MIN_LENGTH = 8
+
+# Form field CSS classes
+FORM_CONTROL_CLASS = 'form-control'
+
+# Form field IDs
+USERNAME_FIELD_ID = 'username'
+PASSWORD_FIELD_ID = 'password'
+
+# Form field HTML attributes
+REQUIRED_ATTRIBUTE = True
+
+# Form validation error messages
+ADMIN_USERNAME_MIN_LENGTH_ERROR = 'Username must be at least {} characters long.'
+ADMIN_PASSWORD_MIN_LENGTH_ERROR = 'Password must be at least {} characters long.'
+ADMIN_INVALID_CREDENTIALS_ERROR = 'Invalid username or password.'
+ADMIN_INACTIVE_ACCOUNT_ERROR = 'This account is inactive.'
+ADMIN_NO_PERMISSION_ERROR = 'You do not have permission to access the admin area.'
+
+# Form field placeholders (translation keys)
+USERNAME_PLACEHOLDER = 'Username'
+PASSWORD_PLACEHOLDER = 'Password'
+
+# Form field labels (translation keys)
+USERNAME_LABEL = 'Username'
+PASSWORD_LABEL = 'Password'
+
+# Success/Info messages
+ADMIN_WELCOME_MESSAGE = 'Welcome %(name)s!'
+ADMIN_LOGOUT_SUCCESS_MESSAGE = 'You have been logged out successfully.'
+
+# Admin middleware messages
+ADMIN_LOGIN_REQUIRED_MESSAGE = 'Please login to access the admin area.'
+ADMIN_PERMISSION_REQUIRED_MESSAGE = 'You do not have permission to access the admin area.'
+
+# Admin path constants
+ADMIN_BASE_PATH = '/admin/'
+ADMIN_URL_PATTERN_TEMPLATE = r'^(/({lang_pattern}))?/admin/'
+
+# Exempt URL patterns for admin middleware
+ADMIN_EXEMPT_URL_PATTERNS = [
+    '/i18n/',  # Django i18n URLs
+    '/django-admin/',  # Django default admin
+    '/static/',  # Static files
+    '/media/',  # Media files
+]
+
+# Default language if settings.LANGUAGES is not configured
+DEFAULT_LANGUAGE_CODE = 'en'
+DEFAULT_LANGUAGE_NAME = 'English'
+
+# =============================================================================
 # DATABASE CONSTRAINTS
 # =============================================================================
 # Note: ON_DELETE_RESTRICT will be imported from django.db.models.RESTRICT

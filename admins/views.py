@@ -8,7 +8,11 @@ from django.views.decorators.csrf import csrf_protect
 from django.utils.translation import gettext_lazy as _
 
 # Local application imports
-from utils.constant import ADMIN_DATETIME_FORMAT
+from utils.constant import (
+    ADMIN_DATETIME_FORMAT,
+    ADMIN_WELCOME_MESSAGE,
+    ADMIN_LOGOUT_SUCCESS_MESSAGE
+)
 from .forms import AdminLoginForm
 
 # Model imports
@@ -40,7 +44,7 @@ def admin_login(request):
             login(request, user)
             messages.success(
                 request,
-                _('Welcome %(name)s!') % {
+                _(ADMIN_WELCOME_MESSAGE) % {
                     'name': user.get_full_name() or user.username}
             )
             return redirect('admin_dashboard')
@@ -81,6 +85,6 @@ def admin_logout(request):
     Note: Admin permission check is handled by AdminPermissionMiddleware
     """
     if request.user.is_authenticated and request.user.is_superuser:
-        messages.success(request, _('You have been logged out successfully.'))
+        messages.success(request, _(ADMIN_LOGOUT_SUCCESS_MESSAGE))
     logout(request)
     return redirect('admin_login')

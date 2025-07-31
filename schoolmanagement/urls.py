@@ -22,6 +22,7 @@ from django.conf.urls.i18n import i18n_patterns
 urlpatterns = [
     path("django-admin/", admin.site.urls),  # Rename to avoid conflict
     path('i18n/', include('django.conf.urls.i18n')),  # Language switching
+    path("teacher/", include("teachers.urls"))
 ]
 
 # Add i18n patterns for internationalized URLs

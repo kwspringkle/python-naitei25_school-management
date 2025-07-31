@@ -1,8 +1,44 @@
+import re
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.deprecation import MiddlewareMixin
+from django.conf import settings
+
+# Import constants
+from utils.constant import (
+    ADMIN_LOGIN_REQUIRED_MESSAGE,
+    ADMIN_PERMISSION_REQUIRED_MESSAGE,
+    ADMIN_BASE_PATH,
+    ADMIN_URL_PATTERN_TEMPLATE,
+    ADMIN_EXEMPT_URL_PATTERNS,
+    DEFAULT_LANGUAGE_CODE,
+    DEFAULT_LANGUAGE_NAME
+)
+
+
+def is_admin_path(path, supported_langs=None):
+    """
+    Check if the given path is an admin path with flexible language support
+    
+    Args:
+        path (str): The request path to check
+        supported_langs (list, optional): List of supported language codes
+        
+    Returns:
+        bool: True if path is an admin path, False otherwise
+    """
+    if supported_langs is None:
+        # Get supported languages from Django settings
+        languages = getattr(settings, 'LANGUAGES', [(DEFAULT_LANGUAGE_CODE, DEFAULT_LANGUAGE_NAME)])
+        supported_langs = [lang_code for lang_code, _ in languages]
+    
+    # Create regex pattern with supported languages
+    lang_pattern = '|'.join(supported_langs)
+    pattern = ADMIN_URL_PATTERN_TEMPLATE.format(lang_pattern=lang_pattern)
+    
+    return re.match(pattern, path) is not None
 
 
 class AdminPermissionMiddleware(MiddlewareMixin):
@@ -14,12 +50,6 @@ class AdminPermissionMiddleware(MiddlewareMixin):
     EXEMPT_URLS = [
         'admin_login',
         'set_language',  # Language switching
-    ]
-
-    # URL patterns that don't require admin permission check
-    EXEMPT_URL_PATTERNS = [
-        '/i18n/',  # Django i18n URLs
-        '/django-admin/',  # Django default admin
     ]
 
     def process_view(self, request, view_func, view_args, view_kwargs):
@@ -35,23 +65,22 @@ class AdminPermissionMiddleware(MiddlewareMixin):
             return None
 
         # Skip permission check for exempt URL patterns
-        for pattern in self.EXEMPT_URL_PATTERNS:
+        for pattern in ADMIN_EXEMPT_URL_PATTERNS:
             if current_path.startswith(pattern):
                 return None
 
         # Skip permission check if not in admin area
-        if not current_path.startswith('/admin/') and not current_path.startswith('/en/admin/') and not current_path.startswith('/vi/admin/'):
+        if not is_admin_path(current_path):
             return None
 
         # Check if user is authenticated
         if not request.user.is_authenticated:
-            messages.info(request, _('Please login to access the admin area.'))
+            messages.info(request, _(ADMIN_LOGIN_REQUIRED_MESSAGE))
             return redirect('admin_login')
 
         # Check if user has admin permissions
         if not request.user.is_superuser:
-            messages.error(request, _(
-                'You do not have permission to access the admin area.'))
+            messages.error(request, _(ADMIN_PERMISSION_REQUIRED_MESSAGE))
             return redirect('admin_login')
 
         # Permission check passed, continue to view
@@ -70,10 +99,7 @@ class AdminSecurityMiddleware(MiddlewareMixin):
         # Add security headers for admin area
         current_path = request.path
 
-        if (current_path.startswith('/admin/') or
-            current_path.startswith('/en/admin/') or
-                current_path.startswith('/vi/admin/')):
-
+        if is_admin_path(current_path):
             # Add additional security for admin area
             request.META['HTTP_X_ADMIN_AREA'] = True
 
@@ -85,10 +111,7 @@ class AdminSecurityMiddleware(MiddlewareMixin):
         """
         current_path = request.path
 
-        if (current_path.startswith('/admin/') or
-            current_path.startswith('/en/admin/') or
-                current_path.startswith('/vi/admin/')):
-
+        if is_admin_path(current_path):
             # Add security headers for admin area
             response['X-Frame-Options'] = 'DENY'
             response['X-Content-Type-Options'] = 'nosniff'
@@ -109,9 +132,7 @@ class AdminActivityLogMiddleware(MiddlewareMixin):
         current_path = request.path
 
         # Only log activities in admin area
-        if not (current_path.startswith('/admin/') or
-                current_path.startswith('/en/admin/') or
-                current_path.startswith('/vi/admin/')):
+        if not is_admin_path(current_path):
             return None
 
         # Skip logging for certain URLs
