@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"POT-Creation-Date: 2025-08-04 08:52+0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,142 +17,385 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admins/forms.py:16 admins/forms.py:19
+#: .\admins\forms.py:136 .\admins\forms.py:281
+#, fuzzy
+#| msgid "Username"
+msgid "Enter username"
+msgstr "Username"
+
+#: .\admins\forms.py:139 .\admins\forms.py:284
 msgid "Username"
 msgstr "Username"
 
-#: admins/forms.py:26 admins/forms.py:29
+#: .\admins\forms.py:145 .\admins\forms.py:290
+msgid "Enter email address"
+msgstr ""
+
+#: .\admins\forms.py:148 .\admins\forms.py:293
+msgid "Email"
+msgstr ""
+
+#: .\admins\forms.py:154 .\admins\forms.py:299
+#, fuzzy
+#| msgid "Password"
+msgid "Enter password"
+msgstr "Password"
+
+#: .\admins\forms.py:157 .\admins\forms.py:302
 msgid "Password"
 msgstr "Password"
 
-#: admins/forms.py:48
-msgid "Username must be at least 3 characters long."
-msgstr "Username must be at least 3 characters long."
+#: .\admins\forms.py:164 .\admins\forms.py:309
+msgid "Confirm password"
+msgstr ""
 
-#: admins/forms.py:58
-msgid "Password must be at least 4 characters long."
-msgstr "Password must be at least 4 characters long."
+#: .\admins\forms.py:167 .\admins\forms.py:312
+#, fuzzy
+#| msgid "Password"
+msgid "Confirm Password"
+msgstr "Password"
 
-#: admins/forms.py:78
-msgid "Invalid username or password."
-msgstr "Invalid username or password."
+#: .\admins\forms.py:175
+msgid "Enter USN"
+msgstr ""
 
-#: admins/forms.py:81
-msgid "This account is inactive."
-msgstr "This account is inactive."
+#: .\admins\forms.py:178
+msgid "USN"
+msgstr ""
 
-#: admins/forms.py:84
-msgid "You do not have permission to access the admin area."
-msgstr "You do not have permission to access the admin area."
+#: .\admins\forms.py:185 .\admins\forms.py:331
+msgid "Enter full name"
+msgstr ""
 
-#: admins/views.py:35
-msgid "Welcome %(name)s!"
-msgstr "Welcome %(name)s!"
+#: .\admins\forms.py:188 .\admins\forms.py:334
+msgid "Full Name"
+msgstr ""
 
-#: admins/views.py:57
-msgid "You do not have permission to access this page."
-msgstr "You do not have permission to access this page."
+#: .\admins\forms.py:197 .\admins\forms.py:343
+msgid "Gender"
+msgstr ""
 
-#: admins/views.py:84
-msgid "You have been logged out successfully."
-msgstr "You have been logged out successfully."
+#: .\admins\forms.py:207 .\admins\forms.py:353
+msgid "Date of Birth"
+msgstr ""
 
-#: admins/templates/admins/base.html:56
+#: .\admins\forms.py:214 .\admins\forms.py:360
+msgid "Enter address"
+msgstr ""
+
+#: .\admins\forms.py:217 .\admins\forms.py:363
+msgid "Address"
+msgstr ""
+
+#: .\admins\forms.py:225 .\admins\forms.py:371
+msgid "Enter phone number"
+msgstr ""
+
+#: .\admins\forms.py:227 .\admins\forms.py:373
+msgid "Phone Number"
+msgstr ""
+
+#: .\admins\forms.py:237
+#, fuzzy
+#| msgid "Classes"
+msgid "Class"
+msgstr "Classes"
+
+#: .\admins\forms.py:238
+msgid "Select a class"
+msgstr ""
+
+#: .\admins\forms.py:250 .\admins\forms.py:396
+msgid "Passwords do not match"
+msgstr ""
+
+#: .\admins\forms.py:256 .\admins\forms.py:402
+msgid "Username already exists"
+msgstr ""
+
+#: .\admins\forms.py:262
+msgid "USN already exists"
+msgstr ""
+
+#: .\admins\forms.py:268 .\admins\forms.py:442
+msgid "Email already exists"
+msgstr ""
+
+#: .\admins\forms.py:320
+msgid "Auto-generated (e.g., T001)"
+msgstr ""
+
+#: .\admins\forms.py:323
+#, fuzzy
+#| msgid "Teachers"
+msgid "Teacher ID"
+msgstr "Teachers"
+
+#: .\admins\forms.py:383
+#, fuzzy
+#| msgid "Departments"
+msgid "Department"
+msgstr "Departments"
+
+#: .\admins\forms.py:384
+#, fuzzy
+#| msgid "Departments"
+msgid "Select a department"
+msgstr "Departments"
+
+#: .\admins\templates\admins\add_student.html:13
+#: .\admins\templates\admins\add_teacher.html:13
+msgid "Back to Dashboard"
+msgstr ""
+
+#: .\admins\templates\admins\add_student.html:23
+msgid "Student Login Account"
+msgstr ""
+
+#: .\admins\templates\admins\add_student.html:24
+msgid "Create login credentials for the student to access the system"
+msgstr ""
+
+#: .\admins\templates\admins\add_student.html:67
+#, fuzzy
+#| msgid "Profile Information"
+msgid "Student Information"
+msgstr "Profile Information"
+
+#: .\admins\templates\admins\add_student.html:132
+#: .\admins\templates\admins\add_teacher.html:135
+#: .\teachers\templates\t_homepage.html:121
+msgid "Cancel"
+msgstr ""
+
+#: .\admins\templates\admins\add_teacher.html:23
+msgid "Teacher Login Account"
+msgstr ""
+
+#: .\admins\templates\admins\add_teacher.html:24
+msgid "Create login credentials for the teacher to access the system"
+msgstr ""
+
+#: .\admins\templates\admins\add_teacher.html:67
+#, fuzzy
+#| msgid "Profile Information"
+msgid "Teacher Information"
+msgstr "Profile Information"
+
+#: .\admins\templates\admins\add_teacher.html:79
+msgid "Teacher ID will be automatically generated (e.g., T001, T002, etc.)"
+msgstr ""
+
+#: .\admins\templates\admins\base.html:56
 msgid "Profile Information"
 msgstr "Profile Information"
 
-#: admins/templates/admins/base.html:57
-msgid "Settings"
-msgstr "Settings"
-
-#: admins/templates/admins/base.html:59
+#: .\admins\templates\admins\base.html:59
+#: .\teachers\templates\partials\_navbar.html:15
+#: .\teachers\templates\t_homepage.html:122
 msgid "Logout"
 msgstr "Logout"
 
-#: admins/templates/admins/dashboard.html:4
+#: .\admins\templates\admins\dashboard.html:4
 msgid "Admin Dashboard - School Management"
 msgstr "Admin Dashboard - School Management"
 
-#: admins/templates/admins/dashboard.html:13
-msgid "Welcome, {{ name }}!"
-msgstr "Welcome, {{ name }}!"
+#: .\admins\templates\admins\dashboard.html:13
+#, fuzzy, python-format
+#| msgid "Welcome %(name)s!"
+msgid "Welcome, %(name)s!"
+msgstr "Welcome %(name)s!"
 
-#: admins/templates/admins/dashboard.html:15
+#: .\admins\templates\admins\dashboard.html:15
 msgid "Manage school system efficiently"
 msgstr "Manage school system efficiently"
 
-#: admins/templates/admins/dashboard.html:25
+#: .\admins\templates\admins\dashboard.html:25
 msgid "Students"
 msgstr "Students"
 
-#: admins/templates/admins/dashboard.html:32
+#: .\admins\templates\admins\dashboard.html:32
 msgid "Teachers"
 msgstr "Teachers"
 
-#: admins/templates/admins/dashboard.html:39
+#: .\admins\templates\admins\dashboard.html:39
 msgid "Departments"
 msgstr "Departments"
 
-#: admins/templates/admins/dashboard.html:46
+#: .\admins\templates\admins\dashboard.html:46
 msgid "Subjects"
 msgstr "Subjects"
 
-#: admins/templates/admins/dashboard.html:53
+#: .\admins\templates\admins\dashboard.html:53
 msgid "Classes"
 msgstr "Classes"
 
-#: admins/templates/admins/dashboard.html:63
+#: .\admins\templates\admins\dashboard.html:63
 msgid "Quick Actions"
 msgstr "Quick Actions"
 
-#: admins/templates/admins/dashboard.html:68
+#: .\admins\templates\admins\dashboard.html:68 .\admins\views.py:145
+#: .\admins\views.py:146
 msgid "Add Student"
 msgstr "Add Student"
 
-#: admins/templates/admins/dashboard.html:73
+#: .\admins\templates\admins\dashboard.html:73 .\admins\views.py:202
+#: .\admins\views.py:203
 msgid "Add Teacher"
 msgstr "Add Teacher"
 
-#: admins/templates/admins/dashboard.html:78
-msgid "System Settings"
-msgstr "System Settings"
-
-#: admins/templates/admins/dashboard.html:88
+#: .\admins\templates\admins\dashboard.html:83
 msgid "Recent Activities"
 msgstr "Recent Activities"
 
-#: admins/templates/admins/dashboard.html:92
+#: .\admins\templates\admins\dashboard.html:87
 msgid "System is running normally"
 msgstr "System is running normally"
 
-#: admins/templates/admins/dashboard.html:95
+#: .\admins\templates\admins\dashboard.html:90
 msgid "Last login"
 msgstr "Last login"
 
-#: admins/templates/admins/login.html:8
+#: .\admins\templates\admins\login.html:8
 msgid "Admin Login - School Management"
 msgstr "Admin Login - School Management"
 
-#: admins/templates/admins/login.html:23
+#: .\admins\templates\admins\login.html:23
 msgid "Admin Login"
 msgstr "Admin Login"
 
-#: admins/templates/admins/login.html:24
+#: .\admins\templates\admins\login.html:24
 msgid "School Management System"
 msgstr "School Management System"
 
-#: admins/templates/admins/login.html:65
+#: .\admins\templates\admins\login.html:65
 msgid "Login"
 msgstr "Login"
 
-#: admins/templates/admins/login.html:70
+#: .\admins\templates\admins\login.html:70
 msgid "Administrator Area Only"
 msgstr "Administrator Area Only"
 
-#: admins/middleware.py:42
-msgid "Please login to access the admin area."
-msgstr "Please login to access the admin area."
+#: .\admins\views.py:129
+msgid "Student \"{}\" has been successfully added."
+msgstr ""
 
-#: admins/middleware.py:46
-msgid "You do not have permission to access the admin area."
-msgstr "You do not have permission to access the admin area."
+#: .\admins\views.py:134
+msgid "Error creating student: {}"
+msgstr ""
+
+#: .\admins\views.py:186
+msgid "Teacher \"{}\" has been successfully added."
+msgstr ""
+
+#: .\admins\views.py:191
+msgid "Error creating teacher: {}"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:12
+msgid "homepage"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:36
+msgid "Welcome"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:50
+msgid "Attendance"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:51
+msgid ""
+"Enter the attendance of the students based on the class they are in. There "
+"is also the provision to edit the attendance of a whole class or student "
+"individually."
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:54
+msgid "Enter Attendance"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:65
+msgid "Marks"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:66
+msgid ""
+"Enter the marks of the students based on the class they are in. This "
+"includes Internals, events and SEE. The marks of the students can also be "
+"edited."
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:69
+msgid "Enter Marks"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:80
+msgid "TimeTable"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:81
+msgid ""
+"View the timetable in a tabular form. For a particular class, it specifies a "
+"list of teachers who handle the same class that are free for that time slot."
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:84
+msgid "View TimeTable"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:95
+msgid "Reports"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:96
+msgid ""
+"Generate reports for each class. These reports include generating a table "
+"consisting of the students belonging to that class and their respective CIE "
+"and Attendance."
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:99
+msgid "Generate Reports"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:114
+msgid "Ready to Leave?"
+msgstr ""
+
+#: .\teachers\templates\t_homepage.html:119
+msgid "Select \\"
+msgstr ""
+
+#~ msgid "Username must be at least 3 characters long."
+#~ msgstr "Username must be at least 3 characters long."
+
+#~ msgid "Password must be at least 4 characters long."
+#~ msgstr "Password must be at least 4 characters long."
+
+#~ msgid "Invalid username or password."
+#~ msgstr "Invalid username or password."
+
+#~ msgid "This account is inactive."
+#~ msgstr "This account is inactive."
+
+#~ msgid "You do not have permission to access the admin area."
+#~ msgstr "You do not have permission to access the admin area."
+
+#~ msgid "You do not have permission to access this page."
+#~ msgstr "You do not have permission to access this page."
+
+#~ msgid "You have been logged out successfully."
+#~ msgstr "You have been logged out successfully."
+
+#~ msgid "Settings"
+#~ msgstr "Settings"
+
+#~ msgid "Welcome, {{ name }}!"
+#~ msgstr "Welcome, {{ name }}!"
+
+#~ msgid "System Settings"
+#~ msgstr "System Settings"
+
+#~ msgid "Please login to access the admin area."
+#~ msgstr "Please login to access the admin area."
