@@ -49,7 +49,8 @@ class Subject(models.Model):
     dept = models.ForeignKey(Dept, on_delete=models.RESTRICT)
     id = models.CharField(primary_key=True, max_length=SUBJECT_ID_MAX_LENGTH)
     name = models.CharField(max_length=SUBJECT_NAME_MAX_LENGTH)
-    shortname = models.CharField(max_length=SUBJECT_SHORTNAME_MAX_LENGTH, default=DEFAULT_SUBJECT_SHORTNAME)
+    shortname = models.CharField(
+        max_length=SUBJECT_SHORTNAME_MAX_LENGTH, default=DEFAULT_SUBJECT_SHORTNAME)
 
     def __str__(self):
         return self.name

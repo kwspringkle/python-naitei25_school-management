@@ -14,26 +14,31 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='class',
             name='dept',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='admins.dept'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.RESTRICT, to='admins.dept'),
         ),
         migrations.AlterField(
             model_name='class',
             name='id',
-            field=models.CharField(max_length=100, primary_key=True, serialize=False),
+            field=models.CharField(
+                max_length=100, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='dept',
             name='id',
-            field=models.CharField(max_length=100, primary_key=True, serialize=False),
+            field=models.CharField(
+                max_length=100, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='subject',
             name='dept',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='admins.dept'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.RESTRICT, to='admins.dept'),
         ),
         migrations.AlterField(
             model_name='subject',
             name='id',
-            field=models.CharField(max_length=50, primary_key=True, serialize=False),
+            field=models.CharField(
+                max_length=50, primary_key=True, serialize=False),
         ),
     ]

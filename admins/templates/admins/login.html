@@ -1,0 +1,79 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Admin Login - School Management" %}</title>
+    <link href="{% static 'admins/css/bootstrap-minimal.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'admins/css/admin-custom.css' %}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h3 class="mb-0">{% trans "Admin Login" %}</h3>
+                <p class="mb-0 opacity-75">{% trans "School Management System" %}</p>
+            </div>
+            
+            <div class="login-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-floating">
+                        {{ form.username }}
+                        <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-floating">
+                        {{ form.password }}
+                        <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-login">
+                        {% trans "Login" %}
+                    </button>
+                </form>
+                
+                <div class="footer-text">
+                    {% trans "Administrator Area Only" %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{% static 'admins/js/bootstrap-minimal.js' %}"></script>
+</body>
+</html>
+

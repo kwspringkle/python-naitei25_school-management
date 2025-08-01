@@ -17,8 +17,17 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.i18n import i18n_patterns
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("django-admin/", admin.site.urls),  # Rename to avoid conflict
+    path('i18n/', include('django.conf.urls.i18n')),  # Language switching
     path("teacher/", include("teachers.urls"))
 ]
+
+# Add i18n patterns for internationalized URLs
+urlpatterns += i18n_patterns(
+    path("admin/", include('admins.urls')),  # Custom admin URLs
+    path("", include('admins.urls')),  # Root path redirect to admin login
+    prefix_default_language=False,
+)
