@@ -1,11 +1,61 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+
+from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
+from teachers.models import Teacher
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect    
+
 from django.urls import reverse
 from .models import Teacher, Assign, ExamSession, Marks
 from students.models import StudentSubject
 from django.db import transaction
+
+
+
+@login_required
+def teacher_dashboard(request):
+    """
+    Teacher dashboard view - only accessible to authenticated teachers
+    """
+    # Check if user is a teacher
+    if not getattr(request.user, 'is_teacher', False):
+        messages.error(request, _('Access denied. Teacher credentials required.'))
+        return redirect('unified_login')
+    
+    # Get teacher profile
+    try:
+        teacher = Teacher.objects.get(user=request.user)
+    except Teacher.DoesNotExist:
+        messages.error(request, _('Teacher profile not found. Please contact administrator.'))
+        return redirect('unified_logout')
+    
+    context = {
+        'teacher': teacher,
+        'user': request.user,
+    }
+    
+    return render(request, 't_homepage.html', context)
+
+
+def teacher_logout(request):
+    """
+    Teacher logout view - redirects to unified logout
+    """
+    return redirect('unified_logout')
+
+
+# Legacy view for backward compatibility
+@login_required
+def index(request):
+    """
+    Legacy teacher index view - redirects to new dashboard
+    """
+    return redirect('teacher_dashboard')
+
+
 # Create your views here.
 
 @login_required

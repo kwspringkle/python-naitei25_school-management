@@ -210,6 +210,68 @@ DEFAULT_LANGUAGE_CODE = 'en'
 DEFAULT_LANGUAGE_NAME = 'English'
 
 # =============================================================================
+# UNIFIED AUTHENTICATION CONSTANTS
+# =============================================================================
+
+# URL names for redirects
+ADMIN_DASHBOARD_URL = 'admin_dashboard'
+TEACHER_DASHBOARD_URL = 'teacher_dashboard'
+STUDENT_DASHBOARD_URL = 'student_dashboard'
+UNIFIED_LOGIN_URL = 'unified_login'
+
+# Template paths
+UNIFIED_LOGIN_TEMPLATE = 'common/login.html'
+
+# User attribute names
+IS_TEACHER_ATTRIBUTE = 'is_teacher'
+IS_STUDENT_ATTRIBUTE = 'is_student'
+
+# Welcome message templates
+ADMIN_WELCOME_MSG_TEMPLATE = 'Welcome {}! (Administrator)'
+TEACHER_WELCOME_MSG_TEMPLATE = 'Welcome {}! (Teacher)'
+STUDENT_WELCOME_MSG_TEMPLATE = 'Welcome {}! (Student)'
+
+# Error messages
+UNIFIED_NO_PERMISSION_ERROR = 'Your account does not have permission to access this system.'
+UNIFIED_INVALID_ROLE_ERROR = 'Invalid user role'
+UNIFIED_FORM_ERRORS_MESSAGE = 'Please correct the errors below.'
+
+# Success messages
+UNIFIED_LOGOUT_SUCCESS_MSG_TEMPLATE = 'Goodbye {}! You have been logged out successfully.'
+UNIFIED_LOGOUT_SUCCESS_MSG_ANONYMOUS = 'You have been logged out successfully.'
+
+# Form context keys
+FORM_CONTEXT_KEY = 'form'
+TITLE_CONTEXT_KEY = 'title'
+LOGIN_TITLE = 'Login'
+
+# =============================================================================
+# STUDENTS FORM CONSTANTS
+# =============================================================================
+
+# Field length constants
+STUDENT_USERNAME_MAX_LENGTH = 254
+
+# Student validation error messages
+STUDENT_INVALID_CREDENTIALS_ERROR = 'Invalid student credentials'
+
+# Student attribute names  
+STUDENT_IS_STUDENT_ATTRIBUTE = 'is_student'
+
+# =============================================================================
+# TEACHERS FORM CONSTANTS
+# =============================================================================
+
+# Field length constants
+TEACHER_USERNAME_MAX_LENGTH = 254
+
+# Teacher validation error messages
+TEACHER_INVALID_CREDENTIALS_ERROR = 'Invalid teacher credentials'
+
+# Teacher attribute names
+TEACHER_IS_TEACHER_ATTRIBUTE = 'is_teacher'
+
+# =============================================================================
 # DATABASE CONSTRAINTS
 # =============================================================================
 # Note: ON_DELETE_RESTRICT will be imported from django.db.models.RESTRICT

@@ -18,16 +18,30 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
+from admins.common_views import unified_login, unified_logout
 
 urlpatterns = [
-    path("django-admin/", admin.site.urls),  # Rename to avoid conflict
+    path("django-admin/", admin.site.urls),  # Django admin interface
     path('i18n/', include('django.conf.urls.i18n')),  # Language switching
-    path("teacher/", include("teachers.urls"))
+    
+    # Unified login/logout for all user types
+    path("login/", unified_login, name="unified_login"),
+    path("logout/", unified_logout, name="unified_logout"),
+    
+    # Teacher URLs (outside i18n for direct access)
+    path("teacher/", include("teachers.urls")),
+    
+    # Student URLs (outside i18n for direct access)
+    path("student/", include("students.urls")),
 ]
 
 # Add i18n patterns for internationalized URLs
 urlpatterns += i18n_patterns(
-    path("admin/", include('admins.urls')),  # Custom admin URLs
-    path("", include('admins.urls')),  # Root path redirect to admin login
+    # Admin URLs (internationalized)
+    path("admin/", include('admins.urls')),
+    
+    # Root path redirects to unified login
+    path("", unified_login),
+    
     prefix_default_language=False,
 )
