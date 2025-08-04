@@ -33,6 +33,7 @@ from teachers.models import Teacher
 from admins.models import User, Dept, Class
 
 
+
 class UnifiedLoginForm(forms.Form):
     """
     Unified login form for all user types (Admin, Teacher, Student)
@@ -92,6 +93,7 @@ class UnifiedLoginForm(forms.Form):
         Return authenticated user
         """
         return self.user_cache
+
 
 
 class AdminLoginForm(forms.Form):
