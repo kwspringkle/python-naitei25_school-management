@@ -62,6 +62,7 @@ class Class(models.Model):
     dept = models.ForeignKey(Dept, on_delete=models.RESTRICT)
     section = models.CharField(max_length=CLASS_SECTION_MAX_LENGTH)
     sem = models.IntegerField()
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         verbose_name_plural = CLASSES_VERBOSE_NAME_PLURAL

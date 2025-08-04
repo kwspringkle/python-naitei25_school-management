@@ -26,8 +26,8 @@ class SubjectAdmin(admin.ModelAdmin):
 
 @admin.register(Class)
 class ClassAdmin(admin.ModelAdmin):
-    list_display = ['id', 'dept', 'section', 'sem']
-    list_filter = ['dept', 'sem']
+    list_display = ['id', 'dept', 'section', 'sem', 'is_active']
+    list_filter = ['dept', 'sem', 'is_active']
     search_fields = ['id', 'section']
 
 
