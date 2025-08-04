@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
     path('<slug:teacher_id>/<int:choice>/Classes/',
         views.t_clas, name='t_clas'),
     path('<int:assign_id>/marks_list/',
@@ -13,4 +14,6 @@ urlpatterns = [
          views.marks_confirm, name='marks_confirm'),
     path('<int:marks_c_id>/Edit_marks/',
          views.edit_marks, name='edit_marks'),
+    path('<slug:teacher_id>/t_timetable/',
+         views.t_timetable, name='t_timetable'),
 ]
