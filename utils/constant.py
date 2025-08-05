@@ -26,6 +26,7 @@ ASSIGN_TIME_PERIOD_MAX_LENGTH = 50
 ASSIGN_TIME_DAY_MAX_LENGTH = 15
 
 TEST_NAME_MAX_LENGTH = 50
+DATE_FORMAT = '%Y-%m-%d'
 
 # =============================================================================
 # DEFAULT VALUES
@@ -308,6 +309,16 @@ TIMETABLE_SKIP_PERIODS = [4, 8]  # Indexes of periods to skip (Break and Lunch)
 # Error messages for timetable
 TIMETABLE_ACCESS_DENIED_MESSAGE = 'Access denied. You can only view your own timetable.'
 TIMETABLE_TEACHER_NOT_FOUND_MESSAGE = 'Teacher not found.'
+
+# Free teachers functionality constants
+FREE_TEACHERS_NO_SUBJECT_KNOWLEDGE_MESSAGE = 'Teacher does not have knowledge of the required subject.'
+FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE = 'No available teachers found for this subject and time slot.'
+FREE_TEACHERS_SUBJECT_REQUIRED_MESSAGE = 'Subject knowledge is required for teaching assignment.'
+
+# Teacher filtering logic constants
+TEACHER_FILTER_DISTINCT_ENABLED = True  # Use distinct() to avoid duplicate teachers
+TEACHER_FILTER_BY_CLASS = True  # Filter teachers by class assignment
+TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE = True  # Check if teacher has subject knowledge
 
 # =============================================================================
 # DATABASE CONSTRAINTS

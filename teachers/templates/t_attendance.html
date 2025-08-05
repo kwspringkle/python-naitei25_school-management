@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+{% if students %}
+<form action="{% url 'att_confirm' assc.id %}" method="post">
+    {% csrf_token %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="fas fa-table"></i>
+            <b>{% trans dept1.name %}</b>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Student name" %}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for s in students %}
+                        <tr>
+                            <td>{% trans s.name %}</td>
+                            <td>
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                    <label class="btn btn-outline-success active">
+                                        <input type="radio" name="{{ s.USN }}" id="option1_{{ s.USN }}" autocomplete="off" value="present" checked> {% trans "Present" %}
+                                    </label>
+                                    <label class="btn btn-outline-danger">
+                                        <input type="radio" name="{{ s.USN }}" id="option2_{{ s.USN }}" autocomplete="off" value="absent"> {% trans "Absent" %}
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+</form>
+{% else %}
+    <p>{% trans "No students in Class" %}</p>
+{% endif %}
+{% endblock %}

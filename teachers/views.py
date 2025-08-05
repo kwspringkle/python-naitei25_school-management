@@ -1,23 +1,25 @@
+from django.utils import timezone
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from teachers.models import Teacher
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponseRedirect    
-
+from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.urls import reverse
-from .models import Teacher, Assign, ExamSession, Marks, AssignTime
-from students.models import StudentSubject
+from .models import Teacher, Assign, ExamSession, Marks, AssignTime, AttendanceClass
+from students.models import Attendance, StudentSubject
 from django.db import transaction
 
 from utils.constant import (
     DAYS_OF_WEEK, TIME_SLOTS, TIMETABLE_TIME_SLOTS,
     TIMETABLE_DAYS_COUNT, TIMETABLE_PERIODS_COUNT, TIMETABLE_DEFAULT_VALUE,
-    TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE
+    TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE,
+    FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE, FREE_TEACHERS_NO_SUBJECT_KNOWLEDGE_MESSAGE,
+    TEACHER_FILTER_DISTINCT_ENABLED, TEACHER_FILTER_BY_CLASS, TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE, DATE_FORMAT
 )
+
 
 @login_required
 def teacher_dashboard(request):
@@ -26,21 +28,23 @@ def teacher_dashboard(request):
     """
     # Check if user is a teacher
     if not getattr(request.user, 'is_teacher', False):
-        messages.error(request, _('Access denied. Teacher credentials required.'))
+        messages.error(request, _(
+            'Access denied. Teacher credentials required.'))
         return redirect('unified_login')
-    
+
     # Get teacher profile
     try:
         teacher = Teacher.objects.get(user=request.user)
     except Teacher.DoesNotExist:
-        messages.error(request, _('Teacher profile not found. Please contact administrator.'))
+        messages.error(request, _(
+            'Teacher profile not found. Please contact administrator.'))
         return redirect('unified_logout')
-    
+
     context = {
         'teacher': teacher,
         'user': request.user,
     }
-    
+
     return render(request, 't_homepage.html', context)
 
 
@@ -59,31 +63,28 @@ def index(request):
     """
     return redirect('teacher_dashboard')
 
-
-# Create your views here.
-
-@login_required
-def index(request):
-    if request.user.is_teacher:
-        return render(request, 't_homepage.html')
-
-
 # Teacher Views
-#Hiển thị thông tin lớp học hoặc các lựa chọn liên quan đến giáo viên.
+# Hiển thị thông tin lớp học hoặc các lựa chọn liên quan đến giáo viên.
+
+
 @login_required
 def t_clas(request, teacher_id, choice):
     teacher1 = get_object_or_404(Teacher, id=teacher_id)
     return render(request, 't_clas.html', {'teacher1': teacher1, 'choice': choice})
 
-#Hiển thị danh sách các phiên thi (ExamSession) của một assignment (môn học/lớp/giáo viên).
+# Hiển thị danh sách các phiên thi (ExamSession) của một assignment (môn học/lớp/giáo viên).
+
+
 @login_required
 def t_marks_list(request, assign_id):
     assignment = get_object_or_404(Assign, id=assign_id)
     exam_sessions_list = ExamSession.objects.filter(assign=assignment)
     return render(request, 't_marks_list.html', {'m_list': exam_sessions_list})
 
-#Hiển thị form nhập điểm cho các học sinh đang học môn học này trong lớp.
+# Hiển thị form nhập điểm cho các học sinh đang học môn học này trong lớp.
 # Chỉ hiển thị học sinh đã đăng ký môn học (StudentSubject).
+
+
 @login_required()
 def t_marks_entry(request, marks_c_id):
     with transaction.atomic():
@@ -91,7 +92,7 @@ def t_marks_entry(request, marks_c_id):
         assignment = exam_session.assign
         subject = assignment.subject
         class_obj = assignment.class_id
-    
+
         # Lấy các học sinh đang học môn này trong lớp này
         students_in_subject = StudentSubject.objects.filter(
             subject=subject,
@@ -106,9 +107,11 @@ def t_marks_entry(request, marks_c_id):
         }
         return render(request, 't_marks_entry.html', context)
 
-#Xử lý dữ liệu điểm số được nhập từ form.
+# Xử lý dữ liệu điểm số được nhập từ form.
 # Lưu điểm cho từng học sinh vào database.
 # Đánh dấu trạng thái phiên thi là đã hoàn thành.
+
+
 @login_required()
 def marks_confirm(request, marks_c_id):
     with transaction.atomic():
@@ -125,8 +128,10 @@ def marks_confirm(request, marks_c_id):
         for student_subject in students_in_subject:
             student = student_subject.student
             student_mark = request.POST[student.USN]
-            student_subject = StudentSubject.objects.get(subject=subject, student=student)
-            marks_instance,_ = student_subject.marks_set.get_or_create(name=exam_session.name)
+            student_subject = StudentSubject.objects.get(
+                subject=subject, student=student)
+            marks_instance, _ = student_subject.marks_set.get_or_create(
+                name=exam_session.name)
             marks_instance.marks1 = student_mark
             marks_instance.save()
         exam_session.status = True
@@ -134,9 +139,11 @@ def marks_confirm(request, marks_c_id):
 
     return HttpResponseRedirect(reverse('t_marks_list', args=(assignment.id,)))
 
-#Hiển thị form để chỉnh sửa điểm của các học sinh đang học môn học này trong lớp.
+# Hiển thị form để chỉnh sửa điểm của các học sinh đang học môn học này trong lớp.
 # Chỉ hiển thị học sinh đã đăng ký môn học (StudentSubject).
 # Cho phép giáo viên cập nhật lại điểm số đã nhập.
+
+
 @login_required()
 def edit_marks(request, marks_c_id):
     with transaction.atomic():
@@ -153,7 +160,8 @@ def edit_marks(request, marks_c_id):
         marks_list = []
         for student_subject in students_in_subject:
             try:
-                marks_instance = student_subject.marks_set.get(name=exam_session.name)
+                marks_instance = student_subject.marks_set.get(
+                    name=exam_session.name)
                 marks_list.append(marks_instance)
             except Marks.DoesNotExist:
                 # Bỏ qua hoặc xử lý trường hợp không có điểm
@@ -164,20 +172,22 @@ def edit_marks(request, marks_c_id):
         }
         return render(request, 'edit_marks.html', context)
 
+
 @login_required()
 def t_timetable(request, teacher_id):
     with transaction.atomic():
         # Check if teacher exists
         teacher = get_object_or_404(Teacher, id=teacher_id)
-        
+
         # Verify the teacher belongs to the authenticated user
         if teacher.user != request.user:
             messages.error(request, _(TIMETABLE_ACCESS_DENIED_MESSAGE))
             return redirect('teacher_dashboard')
-        
+
         asst = AssignTime.objects.filter(assign__teacher_id=teacher_id)
-        class_matrix = [[TIMETABLE_DEFAULT_VALUE for i in range(TIMETABLE_PERIODS_COUNT)] for j in range(TIMETABLE_DAYS_COUNT)]
-        
+        class_matrix = [[TIMETABLE_DEFAULT_VALUE for i in range(
+            TIMETABLE_PERIODS_COUNT)] for j in range(TIMETABLE_DAYS_COUNT)]
+
         for i, d in enumerate(DAYS_OF_WEEK):
             t = 0
             for j in range(TIMETABLE_PERIODS_COUNT):
@@ -198,3 +208,208 @@ def t_timetable(request, teacher_id):
             'time_slots': TIMETABLE_TIME_SLOTS,
         }
         return render(request, 't_timetable.html', context)
+
+
+@login_required()
+def free_teachers(request, asst_id):
+    with transaction.atomic():
+        # Get the assignment time that needs replacement
+        asst = get_object_or_404(AssignTime, id=asst_id)
+
+        # Get the subject that needs to be taught
+        required_subject = asst.assign.subject
+
+        # Get unique teachers who teach in the same class (avoid duplicates)
+        # Using distinct() because a teacher can have multiple assignments in the same class
+        # Example: "phan thanh thắng" teaches 4 subjects in "SOICT : 2 a" class
+        # Without distinct(), he would appear 4 times instead of 1
+        t_list = Teacher.objects.filter(
+            assign__class_id=asst.assign.class_id
+        ).distinct()
+
+        ft_list = []
+        teachers_without_knowledge = []
+
+        for t in t_list:
+            # Get all teaching times for this teacher
+            at_list = AssignTime.objects.filter(assign__teacher=t)
+
+            # Check if teacher is free at the required time
+            is_busy = any([
+                True if at.period == asst.period and at.day == asst.day
+                else False for at in at_list
+            ])
+
+            # Check if teacher has knowledge of the required subject
+            has_subject_knowledge = t.assign_set.filter(
+                subject=required_subject).exists()
+
+            if not is_busy:
+                if has_subject_knowledge:
+                    ft_list.append(t)
+                else:
+                    teachers_without_knowledge.append(t)
+
+        # Add warning message if no teachers available
+        if not ft_list:
+            messages.warning(request, _(
+                FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE))
+
+        return render(request, 'free_teachers.html', {
+            'ft_list': ft_list,
+            'required_subject': required_subject,
+            'assignment_time': asst,
+            'teachers_without_knowledge': teachers_without_knowledge,
+            'total_teachers_checked': len(t_list),
+            'available_teachers_count': len(ft_list)
+        })
+
+
+# Hiển thị danh sách các ngày đã điểm danh và tạo mới danh sách điểm danh theo ngày (nếu cần)
+@login_required
+def t_class_date(request, assign_id):
+    assign = get_object_or_404(Assign, id=assign_id)
+    now = timezone.now()
+    att_list = assign.attendanceclass_set.all().order_by('-date')
+    selected_assc = None
+    class_obj = assign.class_id
+    has_students = class_obj.student_set.exists()
+    students = class_obj.student_set.all() if has_students else []
+
+    if request.method == 'POST' and 'create_attendance' in request.POST:
+        date_str = request.POST.get('attendance_date')
+        try:
+            attendance_date = timezone.datetime.strptime(
+                date_str, DATE_FORMAT).date()
+            if not AttendanceClass.objects.filter(assign=assign, date=attendance_date).exists():
+                with transaction.atomic():
+                    AttendanceClass.objects.create(
+                        assign=assign,
+                        date=attendance_date,
+                        status=0  # Not Marked
+                    )
+            selected_assc = AttendanceClass.objects.get(
+                assign=assign, date=attendance_date)
+        except ValueError:
+            messages.error(request, _(
+                'Invalid date format. Please use YYYY-MM-DD.'))
+            return redirect('t_class_date', assign_id=assign.id)
+
+    elif request.method == 'POST' and 'confirm_attendance' in request.POST:
+        assc_id = request.POST.get('assc_id')
+        assc = get_object_or_404(AttendanceClass, id=assc_id)
+        subject = assign.subject
+
+        with transaction.atomic():
+            for student in students:
+                status_str = request.POST.get(student.USN)
+                status = status_str == 'present'
+                attendance_obj, created = Attendance.objects.get_or_create(
+                    student=student,
+                    subject=subject,
+                    attendanceclass=assc,
+                    date=assc.date,
+                    defaults={'status': status}
+                )
+                if not created:
+                    attendance_obj.status = status
+                    attendance_obj.save()
+            assc.status = 1  # Marked
+            assc.save()
+        messages.success(request, _('Attendance successfully recorded.'))
+        return HttpResponseRedirect(reverse('t_class_date', args=(assign.id,)))
+
+    elif request.method == 'POST' and 'select_attendance' in request.POST:
+        assc_id = request.POST.get('assc_id')
+        selected_assc = get_object_or_404(AttendanceClass, id=assc_id)
+
+    context = {
+        'assign': assign,
+        'att_list': att_list,
+        'today': now.date(),
+        'selected_assc': selected_assc,
+        'c': class_obj,
+        'has_students': has_students,
+        'students': students,
+    }
+    return render(request, 't_class_date.html', context)
+
+# Thông tin điểm danh
+
+
+@login_required
+def t_attendance(request, ass_c_id):
+    assc = get_object_or_404(AttendanceClass, id=ass_c_id)
+    assign = assc.assign
+    class_obj = assign.class_id
+
+    context = {
+        'ass': assign,
+        'c': class_obj,
+        'assc': assc,
+    }
+    return render(request, 't_attendance.html', context)
+
+# View xử lý xác nhận điểm danh
+
+
+@login_required
+def confirm(request, ass_c_id):
+    assc = get_object_or_404(AttendanceClass, id=ass_c_id)
+    assign = assc.assign
+    subject = assign.subject
+    class_obj = assign.class_id
+    has_students = class_obj.student_set.exists()  # Check if students exist
+    students = class_obj.student_set.all() if has_students else [
+    ]  # Fetch students only if needed
+
+    with transaction.atomic():
+        for student in students:
+            status_str = request.POST.get(student.USN)
+            status = status_str == 'present'
+            attendance_obj, created = Attendance.objects.get_or_create(
+                student=student,
+                subject=subject,
+                attendanceclass=assc,
+                date=assc.date,
+                defaults={'status': status}
+            )
+            if not created:
+                attendance_obj.status = status
+                attendance_obj.save()
+        assc.status = 1  # Marked
+        assc.save()
+
+    messages.success(request, _('Attendance successfully recorded.'))
+    return HttpResponseRedirect(reverse('t_class_date', args=(assc.assign.id,)))
+
+# View hiển thị giao diện chỉnh sửa điểm danh
+
+
+@login_required
+def edit_att(request, ass_c_id):
+    assc = get_object_or_404(AttendanceClass, id=ass_c_id)
+    assign = assc.assign
+    subject = assign.subject
+    att_list = Attendance.objects.filter(attendanceclass=assc, subject=subject)
+    context = {
+        'assc': assc,
+        'att_list': att_list,
+    }
+    return render(request, 't_edit_att.html', context)
+
+# View hiển thị danh sách điểm danh
+
+
+@login_required
+def view_att(request, ass_c_id):
+    assc = get_object_or_404(AttendanceClass, id=ass_c_id)
+    assign = assc.assign
+    subject = assign.subject
+    att_list = Attendance.objects.filter(attendanceclass=assc, subject=subject)
+    context = {
+        'assc': assc,
+        'att_list': att_list,
+        'assign': assign,
+    }
+    return render(request, 't_view_att.html', context)

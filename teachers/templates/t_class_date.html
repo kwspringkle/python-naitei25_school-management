@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-table"></i>
+        <b>{% blocktrans %}Attendance for {{ assign.subject }} - {{ assign.class_id }}{% endblocktrans %}</b>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="attendance_date">{% trans "Select Date" %}:</label>
+                <input type="date" id="attendance_date" name="attendance_date" 
+                       value="{{ today|date:'Y-m-d' }}" class="form-control w-25">
+                <button type="submit" name="create_attendance" class="btn btn-primary mt-2">
+                    {% trans "Create New Attendance" %}
+                </button>
+            </div>
+        </form>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>{% trans "Date" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Action" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in att_list %}
+                    <tr>
+                        <td>{{ a.date }}</td>
+                        {% if a.status == 0 %}
+                            <td class="p-3 mb-2 bg-danger text-white">{% trans "Not Marked" %}</td>
+                            <td>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="assc_id" value="{{ a.id }}">
+                                    <button type="submit" name="select_attendance" class="btn btn-primary">
+                                        {% trans "Enter Attendance" %}
+                                    </button>
+                                </form>
+                                <a class="btn btn-info" href="{% url 'view_att' a.id %}" role="button">{% trans "View Attendance" %}</a>
+                            </td>
+                        {% elif a.status == 1 %}
+                            <td class="p-3 mb-2 bg-success text-white">{% trans "Marked" %}</td>
+                            <td>
+                                <a class="btn btn-warning" href="{% url 'edit_att' a.id %}" role="button">{% trans "Edit Attendance" %}</a>
+                                <a class="btn btn-info" href="{% url 'view_att' a.id %}" role="button">{% trans "View Attendance" %}</a>
+                            </td>
+                        {% else %}
+                            <td class="p-3 mb-2 bg-warning text-white">{% trans "Cancelled" %}</td>
+                            <td>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="assc_id" value="{{ a.id }}">
+                                    <button type="submit" name="select_attendance" class="btn btn-primary">
+                                        {% trans "Enter Attendance" %}
+                                    </button>
+                                </form>
+                                <a class="btn btn-info" href="{% url 'view_att' a.id %}" role="button">{% trans "View Attendance" %}</a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">{% trans "No attendance records found" %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if selected_assc %}
+            {% if has_students %}
+            <div class="mt-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="assc_id" value="{{ selected_assc.id }}">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <i class="fas fa-table"></i>
+                            <b>{% blocktrans %}Mark Attendance for {{ assign.subject }} - {{ c }} on {{ selected_assc.date }}{% endblocktrans %}</b>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="attendanceTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "Student name" %}</th>
+                                            <th>{% trans "Status" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for s in students %}
+                                        <tr>
+                                            <td>{% trans s.name %}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                    <label class="btn btn-outline-success active">
+                                                        <input type="radio" name="{{ s.USN }}" id="option1_{{ s.USN }}" 
+                                                               autocomplete="off" value="present" checked> {% trans "Present" %}
+                                                    </label>
+                                                    <label class="btn btn-outline-danger">
+                                                        <input type="radio" name="{{ s.USN }}" id="option2_{{ s.USN }}" 
+                                                               autocomplete="off" value="absent"> {% trans "Absent" %}
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <input class="btn btn-success" type="submit" name="confirm_attendance" value="{% trans 'Submit' %}">
+                </form>
+            </div>
+            {% else %}
+            <p>{% trans "No students in Class" %}</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

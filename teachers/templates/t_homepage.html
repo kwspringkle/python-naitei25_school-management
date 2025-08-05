@@ -54,7 +54,7 @@
             </p>
           </div>
           <div class="card-footer">
-            <a class="btn btn-primary" role="button" href="#">{% trans "Enter Attendance" %}</a>
+            <a class="btn btn-primary" role="button" href="{% url 't_clas' request.user.teacher.id 1%}">{% trans "Enter Attendance" %}</a>
           </div>
         </div>
       </div>
@@ -74,7 +74,7 @@
             </p>
           </div>
           <div class="card-footer">
-            <a class="btn btn-primary" role="button" href="{% url 't_clas' request.user.teacher.id 2 %}">
+            <a class="btn btn-primary" role="button" href="{% url 't_clas' request.user.teacher.id 2%}">
               {% trans "Enter Marks" %}
             </a>
           </div>
