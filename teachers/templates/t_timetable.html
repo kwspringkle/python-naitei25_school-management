@@ -32,7 +32,7 @@
                                 <td></td>
                                 {% else %}
                                 <td>
-                                    <a href="#">
+                                    <a href="{% url 'free_teachers' j.id %}"onclick="openPopup('{% url 'free_teachers' j.id %}'); return false;">
                                         {{ j.assign.class_id }} {{ j.assign.subject.shortname }}
                                     </a>
                                 </td>
@@ -46,8 +46,12 @@
             </div>
         </div>
     </div>
-
-
 </div>
+
+<script>
+function openPopup(url) {
+    window.open(url, 'newwindow', 'width=700,height=500');
+}
+</script>
 
 {% endblock %}

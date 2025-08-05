@@ -16,7 +16,9 @@ from django.db import transaction
 from utils.constant import (
     DAYS_OF_WEEK, TIME_SLOTS, TIMETABLE_TIME_SLOTS,
     TIMETABLE_DAYS_COUNT, TIMETABLE_PERIODS_COUNT, TIMETABLE_DEFAULT_VALUE,
-    TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE
+    TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE,
+    FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE, FREE_TEACHERS_NO_SUBJECT_KNOWLEDGE_MESSAGE,
+    TEACHER_FILTER_DISTINCT_ENABLED, TEACHER_FILTER_BY_CLASS, TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE
 )
 
 @login_required
@@ -198,3 +200,56 @@ def t_timetable(request, teacher_id):
             'time_slots': TIMETABLE_TIME_SLOTS,
         }
         return render(request, 't_timetable.html', context)
+
+@login_required()
+def free_teachers(request, asst_id):
+    with transaction.atomic():
+        # Get the assignment time that needs replacement
+        asst = get_object_or_404(AssignTime, id=asst_id)
+        
+        # Get the subject that needs to be taught
+        required_subject = asst.assign.subject
+        
+        # Get unique teachers who teach in the same class (avoid duplicates)
+        # Using distinct() because a teacher can have multiple assignments in the same class
+        # Example: "phan thanh thắng" teaches 4 subjects in "SOICT : 2 a" class
+        # Without distinct(), he would appear 4 times instead of 1
+        t_list = Teacher.objects.filter(
+            assign__class_id=asst.assign.class_id
+        ).distinct()
+        
+        ft_list = []
+        teachers_without_knowledge = []
+        
+        for t in t_list:
+            # Get all teaching times for this teacher
+            at_list = AssignTime.objects.filter(assign__teacher=t)
+            
+            # Check if teacher is free at the required time
+            is_busy = any([
+                True if at.period == asst.period and at.day == asst.day 
+                else False for at in at_list
+            ])
+            
+            # Check if teacher has knowledge of the required subject
+            has_subject_knowledge = t.assign_set.filter(subject=required_subject).exists()
+            
+            if not is_busy:
+                if has_subject_knowledge:
+                    ft_list.append(t)
+                else:
+                    teachers_without_knowledge.append(t)
+        
+        # Add warning message if no teachers available
+        if not ft_list:
+            messages.warning(request, _(FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE))
+
+        return render(request, 'free_teachers.html', {
+            'ft_list': ft_list,
+            'required_subject': required_subject,
+            'assignment_time': asst,
+            'teachers_without_knowledge': teachers_without_knowledge,
+            'total_teachers_checked': len(t_list),
+            'available_teachers_count': len(ft_list)
+        })
+
