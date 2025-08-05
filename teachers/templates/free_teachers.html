@@ -1,0 +1,166 @@
+{% load static %}
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Free Teachers" %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Custom fonts -->
+    <link href="{% static 'css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <!-- Teachers module CSS -->
+    <link href="{% static 'css/teachers.css' %}" rel="stylesheet">
+
+</head>
+
+<body>
+    <div class="container mt-4">
+        <!-- Header Information -->
+        <div class="header-info">
+            <h2 class="text-center mb-3">
+                <i class="fas fa-users"></i> {% trans "Available Teachers" %}
+            </h2>
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <span class="subject-badge">
+                        <i class="fas fa-book"></i> {% trans "Subject" %}: {{ required_subject.name }}
+                    </span>
+                </div>
+                <div class="col-md-4">
+                    <span class="time-badge">
+                        <i class="fas fa-clock"></i> {% trans "Time" %}: {{ assignment_time.period }}
+                    </span>
+                </div>
+                <div class="col-md-4">
+                    <span class="time-badge">
+                        <i class="fas fa-calendar"></i> {% trans "Day" %}: {{ assignment_time.day }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-card">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h5 class="text-primary">{{ total_teachers_checked }}</h5>
+                    <small class="text-muted">{% trans "Total Teachers Checked" %}</small>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-success">{{ available_teachers_count }}</h5>
+                    <small class="text-muted">{% trans "Available Teachers" %}</small>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-warning">{{ teachers_without_knowledge|length }}</h5>
+                    <small class="text-muted">{% trans "Without Subject Knowledge" %}</small>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-info">{{ assignment_time.assign.class_id }}</h5>
+                    <small class="text-muted">{% trans "Class" %}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Teachers List -->
+        {% if ft_list %}
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle"></i>
+                    {% trans "Available Teachers" %} ({{ available_teachers_count }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for teacher in ft_list %}
+                <div class="card teacher-card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6 class="card-title mb-1">
+                                    <i class="fas fa-user-tie"></i> {{ teacher.name }}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-id-card"></i> ID: {{ teacher.id }}
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check"></i> {% trans "Available" %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-teachers">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <h4>{% trans "No Available Teachers" %}</h4>
+            <p class="text-muted">
+                {% trans "No teachers are available for this subject and time slot." %}
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Teachers Without Subject Knowledge -->
+        {% if teachers_without_knowledge %}
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {% trans "Teachers Without Subject Knowledge" %} ({{ teachers_without_knowledge|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    {% blocktrans %}
+                    These teachers are free at the required time but don't have experience teaching this
+                    subject.
+                    {% endblocktrans %}
+                </div>
+                {% for teacher in teachers_without_knowledge %}
+                <div class="card teacher-card" style="border-left-color: #ffc107;">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6 class="card-title mb-1">
+                                    <i class="fas fa-user-tie"></i> {{ teacher.name }}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-id-card"></i> ID: {{ teacher.id }}
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-exclamation"></i> {% trans "No Subject Knowledge" %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Close Button -->
+        <div class="text-center mt-4">
+            <button class="btn btn-secondary" onclick="window.close();">
+                <i class="fas fa-times"></i> {% trans "Close" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+
+</html>

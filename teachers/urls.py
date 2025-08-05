@@ -16,4 +16,6 @@ urlpatterns = [
          views.edit_marks, name='edit_marks'),
     path('<slug:teacher_id>/t_timetable/',
          views.t_timetable, name='t_timetable'),
+    path('<int:asst_id>/Free_teachers/',
+         views.free_teachers, name='free_teachers'),  
 ]
