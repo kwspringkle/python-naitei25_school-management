@@ -272,6 +272,44 @@ TEACHER_INVALID_CREDENTIALS_ERROR = 'Invalid teacher credentials'
 TEACHER_IS_TEACHER_ATTRIBUTE = 'is_teacher'
 
 # =============================================================================
+# TIMETABLE CONSTANTS
+# =============================================================================
+
+# Fixed time slots for timetable display
+TIMETABLE_TIME_SLOTS = [
+    '7:30 - 8:30',
+    '8:30 - 9:30', 
+    '9:30 - 10:30',
+    'Break',
+    '11:00 - 11:50',
+    '11:50 - 12:40',
+    '12:40 - 1:30',
+    'Lunch',
+    '2:30 - 3:30',
+    '3:30 - 4:30',
+    '4:30 - 5:30',
+]
+
+# Break periods (indexes in TIMETABLE_TIME_SLOTS)
+BREAK_PERIOD_INDEX = 3  # "Break" at index 3
+LUNCH_PERIOD_INDEX = 7  # "Lunch" at index 7
+
+# Timetable matrix dimensions
+TIMETABLE_DAYS_COUNT = 6  # Number of days (Monday to Saturday)
+TIMETABLE_PERIODS_COUNT = 12  # Total number of periods including breaks
+
+# Default values for timetable matrix
+TIMETABLE_DEFAULT_VALUE = True  # Default value for empty cells
+TIMETABLE_EMPTY_CELL_VALUE = True  # Value for empty cells in matrix
+
+# Skip periods (break and lunch periods that don't have classes)
+TIMETABLE_SKIP_PERIODS = [4, 8]  # Indexes of periods to skip (Break and Lunch)
+
+# Error messages for timetable
+TIMETABLE_ACCESS_DENIED_MESSAGE = 'Access denied. You can only view your own timetable.'
+TIMETABLE_TEACHER_NOT_FOUND_MESSAGE = 'Teacher not found.'
+
+# =============================================================================
 # DATABASE CONSTRAINTS
 # =============================================================================
 # Note: ON_DELETE_RESTRICT will be imported from django.db.models.RESTRICT

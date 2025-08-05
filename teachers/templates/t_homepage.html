@@ -83,7 +83,7 @@
 
       <div class="col-lg-3 col-md-6 mb-4">
         <div class="card">
-          <a href="#">
+          <a href="{% url 't_timetable' request.user.teacher.id %}">
             <img class="card-img-top" src="{% static 'images/timetable.png' %}" alt="">
           </a>
           <div class="card-body">
@@ -96,7 +96,7 @@
             </p>
           </div>
           <div class="card-footer">
-            <a class="btn btn-primary" role="button" href="#">{% trans "View TimeTable" %}</a>
+            <a class="btn btn-primary" role="button" href="{% url 't_timetable' request.user.teacher.id %}">{% trans "View TimeTable" %}</a>
           </div>
         </div>
       </div>
@@ -142,7 +142,7 @@
           %}</div>
         <div class="modal-footer">
           <button class="btn btn-secondary" type="button" data-dismiss="modal">{% trans "Cancel" %}</button>
-          <a class="btn btn-primary" href="/accounts/logout">{% trans "Logout" %}</a>
+          <a class="btn btn-primary" href="{% url 'unified_logout' %}">{% trans "Logout" %}</a>
         </div>
       </div>
     </div>

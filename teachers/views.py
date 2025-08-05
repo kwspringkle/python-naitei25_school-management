@@ -9,11 +9,15 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect    
 
 from django.urls import reverse
-from .models import Teacher, Assign, ExamSession, Marks
+from .models import Teacher, Assign, ExamSession, Marks, AssignTime
 from students.models import StudentSubject
 from django.db import transaction
 
-
+from utils.constant import (
+    DAYS_OF_WEEK, TIME_SLOTS, TIMETABLE_TIME_SLOTS,
+    TIMETABLE_DAYS_COUNT, TIMETABLE_PERIODS_COUNT, TIMETABLE_DEFAULT_VALUE,
+    TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE
+)
 
 @login_required
 def teacher_dashboard(request):
@@ -159,3 +163,38 @@ def edit_marks(request, marks_c_id):
             'm_list': marks_list,
         }
         return render(request, 'edit_marks.html', context)
+
+@login_required()
+def t_timetable(request, teacher_id):
+    with transaction.atomic():
+        # Check if teacher exists
+        teacher = get_object_or_404(Teacher, id=teacher_id)
+        
+        # Verify the teacher belongs to the authenticated user
+        if teacher.user != request.user:
+            messages.error(request, _(TIMETABLE_ACCESS_DENIED_MESSAGE))
+            return redirect('teacher_dashboard')
+        
+        asst = AssignTime.objects.filter(assign__teacher_id=teacher_id)
+        class_matrix = [[TIMETABLE_DEFAULT_VALUE for i in range(TIMETABLE_PERIODS_COUNT)] for j in range(TIMETABLE_DAYS_COUNT)]
+        
+        for i, d in enumerate(DAYS_OF_WEEK):
+            t = 0
+            for j in range(TIMETABLE_PERIODS_COUNT):
+                if j == 0:
+                    class_matrix[i][0] = d[0]
+                    continue
+                if j in TIMETABLE_SKIP_PERIODS:
+                    continue
+                try:
+                    a = asst.get(period=TIME_SLOTS[t][0], day=d[0])
+                    class_matrix[i][j] = a
+                except AssignTime.DoesNotExist:
+                    pass
+                t += 1
+
+        context = {
+            'class_matrix': class_matrix,
+            'time_slots': TIMETABLE_TIME_SLOTS,
+        }
+        return render(request, 't_timetable.html', context)
