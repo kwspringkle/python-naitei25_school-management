@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+
+    <title>Student Dashboard</title>
+    {% load static %} {% load i18n %}
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" />
+
+    <!-- Student Dashboard CSS -->
+    <link href="{% static 'css/dashboard.css' %}" rel="stylesheet" />
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid px-4">
+        <a class="navbar-brand" href="{% url 'students:index' %}">CollegeERP</a>
+        <div class="navbar-nav ms-auto">
+          <span class="navbar-text text-light">{{ student.name }}</span>
+          <a
+            class="nav-link text-light"
+            href="#"
+            data-bs-toggle="modal"
+            data-bs-target="#logoutModal"
+            >Logout</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+      <h1 class="welcome-text">{% trans "Welcome" %} {{ student.name }}</h1>
+    </div>
+
+    <!-- Features Section -->
+    <div class="features-section">
+      <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="feature-card">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <!-- Attendance Clipboard Icon -->
+              <rect
+                x="25"
+                y="10"
+                width="50"
+                height="70"
+                rx="5"
+                fill="#FFC107"
+                stroke="#FF8F00"
+                stroke-width="2"
+              />
+              <rect x="30" y="25" width="8" height="8" rx="2" fill="#4CAF50" />
+              <rect x="42" y="25" width="20" height="3" fill="#666" />
+              <rect x="30" y="40" width="8" height="8" rx="2" fill="#4CAF50" />
+              <rect x="42" y="40" width="20" height="3" fill="#666" />
+              <rect x="30" y="55" width="8" height="8" rx="2" fill="#E0E0E0" />
+              <rect x="42" y="55" width="20" height="3" fill="#666" />
+              <path
+                d="M33 28 L35 30 L37 26"
+                stroke="white"
+                stroke-width="1.5"
+                fill="none"
+              />
+              <path
+                d="M33 43 L35 45 L37 41"
+                stroke="white"
+                stroke-width="1.5"
+                fill="none"
+              />
+              <rect x="35" y="5" width="30" height="8" rx="4" fill="#E0E0E0" />
+            </svg>
+            <h4 class="feature-title">{% trans "Attendance" %}</h4>
+            <p class="feature-description">
+              {% blocktrans %} View the attendance status for each of your
+              courses. The attendance of each course is also displayed as list
+              of classes that were conducted. {% endblocktrans %}
+            </p>
+            <a
+              href="{% url 'students:attendance' student.USN %}"
+              class="feature-button"
+              >{% trans "View Attendance" %}</a
+            >
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="feature-card">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <!-- Marks Paper Icon -->
+              <rect
+                x="20"
+                y="15"
+                width="50"
+                height="65"
+                rx="3"
+                fill="white"
+                stroke="#666"
+                stroke-width="2"
+              />
+              <rect x="65" y="20" width="8" height="55" rx="2" fill="#666" />
+              <text
+                x="35"
+                y="35"
+                font-family="Arial"
+                font-size="16"
+                font-weight="bold"
+                fill="#007bff"
+              >
+                A+
+              </text>
+              <line
+                x1="25"
+                y1="45"
+                x2="60"
+                y2="45"
+                stroke="#666"
+                stroke-width="1"
+              />
+              <line
+                x1="25"
+                y1="52"
+                x2="55"
+                y2="52"
+                stroke="#666"
+                stroke-width="1"
+              />
+              <line
+                x1="25"
+                y1="59"
+                x2="50"
+                y2="59"
+                stroke="#666"
+                stroke-width="1"
+              />
+              <line
+                x1="25"
+                y1="66"
+                x2="45"
+                y2="66"
+                stroke="#666"
+                stroke-width="1"
+              />
+            </svg>
+            <h4 class="feature-title">{% trans "Marks" %}</h4>
+            <p class="feature-description">
+              {% blocktrans %} View the marks obtained for each of your courses.
+              These include the marks of 3 internal assessment, 2 events and the
+              Semester End Exam. {% endblocktrans %}
+            </p>
+            <a
+              href="{% url 'students:marks_list' student.USN %}"
+              class="feature-button"
+              >{% trans "View Marks" %}</a
+            >
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="feature-card">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <!-- TimeTable Calendar Icon -->
+              <rect
+                x="15"
+                y="25"
+                width="70"
+                height="55"
+                rx="5"
+                fill="#dc3545"
+              />
+              <rect x="20" y="35" width="60" height="40" rx="2" fill="white" />
+              <rect x="25" y="40" width="8" height="6" fill="#007bff" />
+              <rect x="37" y="40" width="8" height="6" fill="#007bff" />
+              <rect x="49" y="40" width="8" height="6" fill="#007bff" />
+              <rect x="61" y="40" width="8" height="6" fill="#007bff" />
+              <rect x="25" y="50" width="8" height="6" fill="#007bff" />
+              <rect x="37" y="50" width="8" height="6" fill="#007bff" />
+              <rect x="49" y="50" width="8" height="6" fill="#007bff" />
+              <rect x="61" y="50" width="8" height="6" fill="#007bff" />
+              <rect x="25" y="60" width="8" height="6" fill="#007bff" />
+              <rect x="37" y="60" width="8" height="6" fill="#007bff" />
+              <rect x="49" y="60" width="8" height="6" fill="#007bff" />
+              <rect x="61" y="60" width="8" height="6" fill="#007bff" />
+              <rect x="25" y="15" width="4" height="15" rx="2" fill="#999" />
+              <rect x="70" y="15" width="4" height="15" rx="2" fill="#999" />
+            </svg>
+            <h4 class="feature-title">{% trans "TimeTable" %}</h4>
+            <p class="feature-description">
+              {% blocktrans %} View the timetable in a tabular form. The
+              timetable displays all the courses of the student and the time and
+              day at which they are conducted. {% endblocktrans %}
+            </p>
+            <a
+              href="{% url 'students:timetable' student.class_id.id %}"
+              class="feature-button"
+              >{% trans "View TimeTable" %}</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout Modal-->
+    <div
+      class="modal fade"
+      id="logoutModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">
+              {% trans "Ready to Leave?" %}
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            {% trans "Select \"Logout\" below if you are ready to end your
+            current session." %}
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              data-bs-dismiss="modal"
+            >
+              {% trans "Cancel" %}
+            </button>
+            <a class="btn btn-primary" href="{% url 'unified_logout' %}"
+              >{% trans "Logout" %}</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+  </body>
+</html>

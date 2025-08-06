@@ -294,11 +294,11 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:36
 msgid "Welcome"
-msgstr ""
+msgstr "Chào mừng"
 
 #: .\teachers\templates\t_homepage.html:50
 msgid "Attendance"
-msgstr ""
+msgstr "Điểm Danh"
 
 #: .\teachers\templates\t_homepage.html:51
 msgid ""
@@ -313,7 +313,7 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:65
 msgid "Marks"
-msgstr ""
+msgstr "Điểm Số"
 
 #: .\teachers\templates\t_homepage.html:66
 msgid ""
@@ -328,7 +328,7 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:80
 msgid "TimeTable"
-msgstr ""
+msgstr "Thời Khóa Biểu"
 
 #: .\teachers\templates\t_homepage.html:81
 msgid ""
@@ -338,7 +338,183 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:84
 msgid "View TimeTable"
-msgstr ""
+msgstr "Xem Thời Khóa Biểu"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_welcome_message"
+msgstr "Chào mừng"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_attendance_title"
+msgstr "Điểm Danh"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_attendance_description"
+msgstr "Xem tình trạng điểm danh của từng môn học. Điểm danh của mỗi môn học cũng được hiển thị dưới dạng danh sách các lớp học đã được tiến hành."
+
+#: .\students\templates\students\dashboard.html
+msgid "student_view_attendance"
+msgstr "Xem Điểm Danh"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_marks_description"
+msgstr "Xem điểm số của từng môn học. Bao gồm điểm của 3 bài kiểm tra giữa kỳ, 2 sự kiện và kỳ thi cuối kỳ."
+
+#: .\students\templates\students\dashboard.html
+msgid "student_view_marks"
+msgstr "Xem Điểm Số"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_timetable_description"
+msgstr "Xem thời khóa biểu dưới dạng bảng. Hiển thị tất cả các môn học của sinh viên và thời gian, ngày mà chúng được tiến hành."
+
+#: .\students\templates\students\dashboard.html
+msgid "student_view_timetable"
+msgstr "Xem Thời Khóa Biểu"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted."
+msgstr "Xem tình trạng điểm danh của từng môn học. Điểm danh của mỗi môn học cũng được hiển thị dưới dạng danh sách các lớp học đã được tiến hành."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Attendance"
+msgstr "Xem Điểm Danh"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam."
+msgstr "Xem điểm số của từng môn học. Bao gồm điểm của 3 bài kiểm tra giữa kỳ, 2 sự kiện và kỳ thi cuối kỳ."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Marks"
+msgstr "Xem Điểm Số"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted."
+msgstr "Xem thời khóa biểu dưới dạng bảng. Hiển thị tất cả các môn học của sinh viên và thời gian, ngày mà chúng được tiến hành."
+
+#: .\students\templates\students\attendance.html
+msgid "Course ID"
+msgstr "Mã Môn Học"
+
+#: .\students\templates\students\attendance.html
+msgid "Course name"
+msgstr "Tên Môn Học"
+
+#: .\students\templates\students\attendance.html
+msgid "Attended classes"
+msgstr "Lớp Đã Tham Gia"
+
+#: .\students\templates\students\attendance.html
+msgid "Total classes"
+msgstr "Tổng Số Lớp"
+
+#: .\students\templates\students\attendance.html
+msgid "Attendance %"
+msgstr "Tỷ Lệ Điểm Danh %"
+
+#: .\students\templates\students\attendance.html
+msgid "Classes to attend"
+msgstr "Lớp Cần Tham Gia"
+
+#: .\students\templates\students\attendance.html
+msgid "Student has no courses"
+msgstr "Sinh viên không có môn học nào"
+
+#: .\students\templates\students\marks.html
+msgid "Internals 1"
+msgstr "Kiểm Tra 1"
+
+#: .\students\templates\students\marks.html
+msgid "Internals 2"
+msgstr "Kiểm Tra 2"
+
+#: .\students\templates\students\marks.html
+msgid "Internals 3"
+msgstr "Kiểm Tra 3"
+
+#: .\students\templates\students\marks.html
+msgid "Event 1"
+msgstr "Sự Kiện 1"
+
+#: .\students\templates\students\marks.html
+msgid "Event 2"
+msgstr "Sự Kiện 2"
+
+#: .\students\templates\students\marks.html
+msgid "SEE"
+msgstr "Thi Cuối Kỳ"
+
+#: .\students\templates\students\base.html
+msgid "Home"
+msgstr "Trang Chủ"
+
+#: .\students\templates\students\base.html
+msgid "Time Table"
+msgstr "Thời Khóa Biểu"
+
+#: .\students\templates\students\timetable.html
+msgid "Break"
+msgstr "Giải Lao"
+
+#: .\students\templates\students\timetable.html
+msgid "Lunch"
+msgstr "Ăn Trưa"
+
+#: .\students\templates\students\dashboard.html
+msgid "Welcome"
+msgstr "Chào mừng"
+
+#: .\students\templates\students\dashboard.html
+msgid "Attendance"
+msgstr "Điểm danh"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted."
+msgstr "Xem trạng thái điểm danh cho từng khóa học của bạn. Điểm danh của mỗi khóa học cũng được hiển thị dưới dạng danh sách các lớp học đã được tổ chức."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Attendance"
+msgstr "Xem điểm danh"
+
+#: .\students\templates\students\dashboard.html
+msgid "Marks"
+msgstr "Điểm số"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam."
+msgstr "Xem điểm số đạt được cho từng khóa học của bạn. Bao gồm điểm của 3 bài đánh giá nội bộ, 2 sự kiện và bài thi cuối kỳ."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Marks"
+msgstr "Xem điểm số"
+
+#: .\students\templates\students\dashboard.html
+msgid "TimeTable"
+msgstr "Thời khóa biểu"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted."
+msgstr "Xem thời khóa biểu dưới dạng bảng. Thời khóa biểu hiển thị tất cả các khóa học của sinh viên và thời gian, ngày học."
+
+#: .\students\templates\students\dashboard.html
+msgid "View TimeTable"
+msgstr "Xem thời khóa biểu"
+
+#: .\students\templates\students\dashboard.html
+msgid "Ready to Leave?"
+msgstr "Sẵn sàng rời đi?"
+
+#: .\students\templates\students\dashboard.html
+msgid "Select \"Logout\" below if you are ready to end your current session."
+msgstr "Chọn \"Đăng xuất\" bên dưới nếu bạn sẵn sàng kết thúc phiên làm việc hiện tại."
+
+#: .\students\templates\students\dashboard.html
+msgid "Cancel"
+msgstr "Hủy"
+
+#: .\students\templates\students\dashboard.html
+msgid "Logout"
+msgstr "Đăng xuất"
 
 #: .\teachers\templates\t_homepage.html:95
 msgid "Reports"

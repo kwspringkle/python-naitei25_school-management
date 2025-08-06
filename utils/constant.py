@@ -63,6 +63,10 @@ TIME_SLOTS = (
     ('4:30 - 5:30', '4:30 - 5:30'),
 )
 
+# Break periods
+BREAK_PERIOD = 'Break'
+LUNCH_PERIOD = 'Lunch'
+
 # Days of week choices
 DAYS_OF_WEEK = (
     ('Monday', 'Monday'),
@@ -217,7 +221,7 @@ DEFAULT_LANGUAGE_NAME = 'English'
 # URL names for redirects
 ADMIN_DASHBOARD_URL = 'admin_dashboard'
 TEACHER_DASHBOARD_URL = 'teacher_dashboard'
-STUDENT_DASHBOARD_URL = 'student_dashboard'
+STUDENT_DASHBOARD_URL = 'students:student_dashboard'
 UNIFIED_LOGIN_URL = 'unified_login'
 
 # Template paths
@@ -328,3 +332,5 @@ TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE = True  # Check if teacher has subject knowl
 
 ATTENDANCE_STANDARD = 75
 CIE_STANDARD = 25
+
+

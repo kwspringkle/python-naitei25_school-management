@@ -1,0 +1,64 @@
+{% extends 'students/base.html' %}
+{% load dict_extras %}
+{% load i18n %}
+
+{% block title %}{% trans "Timetable" %} - CollegeERP{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h2 class="text-center">{% trans "Timetable" %}</h2>
+      </div>
+      <div id="no-more-tables">
+        <table class="col-sm-12 table table-bordered table-striped table-condensed cf">
+          <thead class="cf">
+            <tr>
+              <th></th>
+              {% for slot in time_slots %}
+                <th>
+                  {% if slot == "Break" %}
+                    {% trans "Break" %}
+                  {% elif slot == "Lunch" %}
+                    {% trans "Lunch" %}
+                  {% else %}
+                    {{ slot }}
+                  {% endif %}
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for day in days %}
+              <tr>
+                <td><b>{{ day }}</b></td>
+                {% for slot in time_slots %}
+                  <td>
+                    {% if timetable|lookup:day|lookup:slot %}
+                      {% with timetable|lookup:day|lookup:slot as assignment %}
+                        <strong>{{ assignment.subject.name }}</strong><br />
+                        <small>{{ assignment.teacher.name }}</small>
+                      {% endwith %}
+                    {% else %}
+                      {% if slot == "Break" or slot == "Lunch" %}
+                        <em>
+                          {% if slot == "Break" %}
+                            {% trans "Break" %}
+                          {% else %}
+                            {% trans "Lunch" %}
+                          {% endif %}
+                        </em>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
