@@ -217,7 +217,7 @@ DEFAULT_LANGUAGE_NAME = 'English'
 # URL names for redirects
 ADMIN_DASHBOARD_URL = 'admin_dashboard'
 TEACHER_DASHBOARD_URL = 'teacher_dashboard'
-STUDENT_DASHBOARD_URL = 'student_dashboard'
+STUDENT_DASHBOARD_URL = 'students:student_dashboard'
 UNIFIED_LOGIN_URL = 'unified_login'
 
 # Template paths
@@ -328,3 +328,23 @@ TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE = True  # Check if teacher has subject knowl
 
 ATTENDANCE_STANDARD = 75
 CIE_STANDARD = 25
+
+# =============================================================================
+# STUDENT DASHBOARD CONSTANTS
+# =============================================================================
+
+from django.utils.translation import gettext_lazy as _
+
+# Dashboard feature content (using i18n)
+DASHBOARD_WELCOME_MESSAGE = _("Welcome")
+DASHBOARD_ATTENDANCE_TITLE = _("Attendance")
+DASHBOARD_MARKS_TITLE = _("Marks")
+DASHBOARD_TIMETABLE_TITLE = _("TimeTable")
+
+DASHBOARD_ATTENDANCE_DESCRIPTION = _("View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted.")
+DASHBOARD_MARKS_DESCRIPTION = _("View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam.")
+DASHBOARD_TIMETABLE_DESCRIPTION = _("View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted.")
+
+DASHBOARD_ATTENDANCE_BUTTON = _("View Attendance")
+DASHBOARD_MARKS_BUTTON = _("View Marks")
+DASHBOARD_TIMETABLE_BUTTON = _("View TimeTable")
