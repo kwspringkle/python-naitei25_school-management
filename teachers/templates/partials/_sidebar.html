@@ -9,7 +9,7 @@
 
     {% if request.user.is_teacher %}
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link" href="{% url 't_clas' request.user.teacher.id 1 %}">
             <span>{% trans "Attendance" %}</span>
         </a>
     </li>

@@ -21,7 +21,7 @@
             <td>{{ ass.subject }}</td>
             <td>
               {% if choice == 1 %}
-              <a class="btn btn-primary" href="#" role="button">{% trans "Enter Attendance" %}</a>
+              <a class="btn btn-primary" href="{% url 't_class_date' ass.id %}" role="button">{% trans "Enter Attendance" %}</a>
               <a class="btn btn-warning" href="#">{% trans "Extra Class" %}</a>
               <a class="btn btn-danger" href="#">{% trans "View Students" %}</a>
               {% elif choice == 2 %}

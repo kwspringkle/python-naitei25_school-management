@@ -26,6 +26,7 @@ ASSIGN_TIME_PERIOD_MAX_LENGTH = 50
 ASSIGN_TIME_DAY_MAX_LENGTH = 15
 
 TEST_NAME_MAX_LENGTH = 50
+DATE_FORMAT = '%Y-%m-%d'
 
 # =============================================================================
 # DEFAULT VALUES
