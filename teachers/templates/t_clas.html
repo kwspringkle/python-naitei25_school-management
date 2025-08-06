@@ -30,7 +30,7 @@
               </a>
               <a class="btn btn-danger" href="#">{% trans "View Students" %}</a>
               {% elif choice == 3 %}
-              <a class="btn btn-danger" href="#">{% trans "Generate reports" %}</a>
+              <a class="btn btn-danger" href="{% url 't_report' ass.id %}">{% trans "Generate reports" %}</a>
               {% endif %}
             </td>
           </tr>

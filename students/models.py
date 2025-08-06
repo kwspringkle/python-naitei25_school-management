@@ -57,9 +57,23 @@ class StudentSubject(models.Model):
         return cie
 
     def get_attendance(self):
-        a = AttendanceTotal.objects.get(
-            student=self.student, subject=self.subject)
-        return a.attendance
+        try:
+            # Try to get from AttendanceTotal first
+            a = AttendanceTotal.objects.get(
+                student=self.student, subject=self.subject)
+            return a.attendance
+        except AttendanceTotal.DoesNotExist:
+            # If AttendanceTotal doesn't exist, calculate directly from Attendance
+            total_class = Attendance.objects.filter(
+                subject=self.subject, student=self.student).count()
+            att_class = Attendance.objects.filter(
+                subject=self.subject, student=self.student, status=True).count()
+            
+            if total_class == 0:
+                return 0
+            else:
+                attendance = round(att_class / total_class * 100, 2)
+                return attendance
 
 
 class Attendance(models.Model):
