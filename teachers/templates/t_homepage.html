@@ -103,7 +103,7 @@
 
       <div class="col-lg-3 col-md-6 mb-4">
         <div class="card">
-          <a href="#">
+          <a href="{% url 't_clas' request.user.teacher.id 3 %}">
             <img class="card-img-top" src="{% static 'images/reports.png' %}" alt="">
           </a>
           <div class="card-body">
@@ -117,7 +117,7 @@
             </p>
           </div>
           <div class="card-footer">
-            <a href="#" class="btn btn-primary">{% trans "Generate Reports" %}</a>
+            <a href="{% url 't_clas' request.user.teacher.id 3 %}" class="btn btn-primary">{% trans "Generate Reports" %}</a>
           </div>
         </div>
       </div>

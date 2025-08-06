@@ -1,0 +1,12 @@
+
+{% if value < threshold %}
+    <div class="d-flex align-items-center">
+        <span class="badge badge-danger badge-pill mr-2">{{ value }}{{ suffix }}</span>
+        <i class="{{ icon_fail }}"></i>
+    </div>
+{% else %}
+    <div class="d-flex align-items-center">
+        <span class="badge badge-success badge-pill mr-2">{{ value }}{{ suffix }}</span>
+        <i class="{{ icon_success }}"></i>
+    </div>
+{% endif %}

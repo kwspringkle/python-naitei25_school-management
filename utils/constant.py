@@ -325,3 +325,6 @@ TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE = True  # Check if teacher has subject knowl
 # =============================================================================
 # Note: ON_DELETE_RESTRICT will be imported from django.db.models.RESTRICT
 # in each model file to maintain proper Django constraint behavior
+
+ATTENDANCE_STANDARD = 75
+CIE_STANDARD = 25

@@ -17,7 +17,8 @@ from utils.constant import (
     TIMETABLE_DAYS_COUNT, TIMETABLE_PERIODS_COUNT, TIMETABLE_DEFAULT_VALUE,
     TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE,
     FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE, FREE_TEACHERS_NO_SUBJECT_KNOWLEDGE_MESSAGE,
-    TEACHER_FILTER_DISTINCT_ENABLED, TEACHER_FILTER_BY_CLASS, TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE, DATE_FORMAT
+    TEACHER_FILTER_DISTINCT_ENABLED, TEACHER_FILTER_BY_CLASS, TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE, DATE_FORMAT,
+    ATTENDANCE_STANDARD, CIE_STANDARD
 )
 
 
@@ -413,3 +414,71 @@ def view_att(request, ass_c_id):
         'assign': assign,
     }
     return render(request, 't_view_att.html', context)
+
+#hiển thị báo cáo học tập của học sinh trong một lớp học cụ thể.
+
+@login_required()
+def t_report(request, assign_id):
+    ass = get_object_or_404(Assign, id=assign_id)
+    sc_list = []
+    
+    # Get class information
+    class_obj = ass.class_id
+    subject_obj = ass.subject
+    
+    # Statistics counters
+    # Đếm học sinh có điểm danh tốt (≥75%)
+    good_attendance_count = 0
+    # Đếm học sinh có CIE đạt chuẩn (≥25)
+    good_cie_count = 0
+    # Đếm học sinh cần hỗ trợ (điểm danh <75% HOẶC CIE <25)
+    need_support_count = 0
+    
+    for stud in class_obj.student_set.all():
+        student_subjects = StudentSubject.objects.filter(student=stud, subject=subject_obj)
+        if student_subjects.exists():
+            # If student is registered for this subject, add to list
+            student_subject = student_subjects.first()
+            sc_list.append(student_subject)
+            
+            # Calculate statistics with error handling
+            try:
+                attendance = student_subject.get_attendance()
+            except:
+                attendance = 0
+                
+            try:
+                cie = student_subject.get_cie()
+            except:
+                cie = 0
+            
+            # Count statistics
+            if attendance >= ATTENDANCE_STANDARD:
+                good_attendance_count += 1
+            if cie >= CIE_STANDARD:
+                good_cie_count += 1
+            if attendance < ATTENDANCE_STANDARD or cie < CIE_STANDARD:
+                need_support_count += 1
+    
+    # Calculate pass rate
+    total_students = len(sc_list)
+    pass_rate = 100 if total_students == 0 else round((total_students - need_support_count) / total_students * 100)
+    
+    context = {
+        'sc_list': sc_list,
+        'class_obj': class_obj,
+        'subject_obj': subject_obj,
+        'assignment': ass,
+        'good_attendance_count': good_attendance_count,
+        'good_cie_count': good_cie_count,
+        'need_support_count': need_support_count,
+        'pass_rate': pass_rate,
+        'ATTENDANCE_STANDARD': ATTENDANCE_STANDARD,
+        'CIE_STANDARD': CIE_STANDARD,
+        'attendance_success_label': f"≥{ATTENDANCE_STANDARD}%",
+        'attendance_danger_label': f"<{ATTENDANCE_STANDARD}%",
+        'cie_success_label': f"≥{CIE_STANDARD}",
+        'cie_danger_label': f"<{CIE_STANDARD}",
+    }
+    
+    return render(request, 't_report.html', context)

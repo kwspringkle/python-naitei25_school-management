@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/report.css' %}">
+<link rel="stylesheet" href="{% static 'css/dataTables.bootstrap4.min.css' %}">
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary mr-3">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {% trans "Back" %}
+            </a>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-chart-bar text-primary"></i>
+                {% trans "Academic Report" %}
+                {% if class_obj %}
+                    - {% trans "Class" %} {{ class_obj }}
+                {% endif %}
+            </h1>
+        </div>
+        <div class="d-flex">
+            <span class="badge badge-primary mr-2">
+                <i class="fas fa-users"></i>
+                {% blocktrans count counter=sc_list|length %}
+                    Total Students: {{ counter }}
+                {% plural %}
+                    Total Students: {{ counter }}
+                {% endblocktrans %}
+            </span>
+            {% if subject_obj %}
+                <span class="badge badge-success">
+                    <i class="fas fa-book"></i>
+                    {% trans "Subject" %}: {{ subject_obj.shortname }}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {% trans "Good Attendance" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ good_attendance_count|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans "CIE Meets Standard" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ good_cie_count|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {% trans "Needs Support" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ need_support_count|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans "Pass Rate" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ pass_rate|default:0 }}%
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Report Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table mr-2"></i>
+                {% trans "Detailed Student Report" %}
+            </h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                    aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">{% trans "Options" %}:</div>
+                    <a class="dropdown-item" href="#"><i class="fas fa-download mr-2"></i>{% trans "Export Excel" %}</a>
+                    <a class="dropdown-item" href="#"><i class="fas fa-print mr-2"></i>{% trans "Print Report" %}</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#"><i class="fas fa-eye mr-2"></i>{% trans "View Details" %}</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th style="width: 10%">
+                                <i class="fas fa-id-card mr-1"></i>
+                                {% trans "ID" %}
+                            </th>
+                            <th style="width: 30%">
+                                <i class="fas fa-user mr-1"></i>
+                                {% trans "Full Name" %}
+                            </th>
+                            <th style="width: 25%">
+                                <i class="fas fa-calendar-check mr-1"></i>
+                                {% trans "Attendance (%)" %}
+                            </th>
+                            <th style="width: 25%">
+                                <i class="fas fa-star mr-1"></i>
+                                {% trans "CIE" %}
+                            </th>
+                            <th style="width: 10%">
+                                <i class="fas fa-chart-line mr-1"></i>
+                                {% trans "Status" %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sc in sc_list %}
+                        <tr>
+                            <td class="font-weight-bold text-primary">
+                                {{ sc.student_id }}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center mr-3">
+                                        <span class="text-white font-weight-bold">{{ sc.student.name|first|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-weight-bold">{{ sc.student.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% include "partials/badge_status.html" with value=sc.get_attendance threshold=ATTENDANCE_STANDARD suffix="%" icon_fail="fas fa-exclamation-circle text-danger" icon_success="fas fa-check-circle text-success" %}
+                            </td>
+                            <td>
+                                {% include "partials/badge_status.html" with value=sc.get_cie threshold=CIE_STANDARD suffix="" icon_fail="fas fa-exclamation-triangle text-warning" icon_success="fas fa-star text-warning" %}
+                            </td>
+                            <td>
+                                {% if sc.get_attendance < ATTENDANCE_STANDARD or sc.get_cie < CIE_STANDARD %}
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        {% trans "Needs Support" %}
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check mr-1"></i>
+                                        {% trans "Good" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <h5>{% trans "No Student Data" %}</h5>
+                                    <p>{% trans "No students have registered for this subject." %}</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-info-circle text-info mr-2"></i>
+                        {% trans "Legend" %}
+                    </h6>
+                    <div class="row">
+                        {% include "partials/legend_badge.html" with badge_type="success" label=attendance_success_label description="Attendance meets standard" %}
+                        {% include "partials/legend_badge.html" with badge_type="danger" label=attendance_danger_label description="Attendance below standard" %}
+                        {% include "partials/legend_badge.html" with badge_type="success" label=cie_success_label description="CIE meets standard" %}
+                        {% include "partials/legend_badge.html" with badge_type="danger" label=cie_danger_label description="CIE below standard" %}
+                    </div>                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="{% static 'js/t_report.js' %}"></script>
+
+{% endblock %}
