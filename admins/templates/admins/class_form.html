@@ -1,0 +1,125 @@
+{% extends 'admins/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="welcome-card">
+        <h2>{{ title }}</h2>
+        <p class="mb-0 opacity-75">{% trans "Fill in the details to create or update a class" %}</p>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="action-card">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.id.id_for_label }}" class="form-label">{{ form.id.label }}</label>
+                        {{ form.id }}
+                        {% if form.id.errors %}
+                        <div class="text-danger">{{ form.id.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.dept.id_for_label }}" class="form-label">{{ form.dept.label }}</label>
+                        {{ form.dept }}
+                        {% if form.dept.errors %}
+                        <div class="text-danger">{{ form.dept.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.section.id_for_label }}" class="form-label">{{ form.section.label }}</label>
+                        {{ form.section }}
+                        {% if form.section.errors %}
+                        <div class="text-danger">{{ form.section.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.sem.id_for_label }}" class="form-label">{{ form.sem.label }}</label>
+                        {{ form.sem }}
+                        {% if form.sem.errors %}
+                        <div class="text-danger">{{ form.sem.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}" class="form-check-label">{{ form.is_active.label }}</label>
+                        {% if form.is_active.errors %}
+                        <div class="text-danger">{{ form.is_active.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
+                    <a href="{% url 'class_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if class_obj %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="action-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0">{% trans "Students in this Class" %}</h3>
+                    <a href="{% url 'add_student_to_class' class_id=class_obj.id %}" class="btn-add-modern">
+                        <i class="fas fa-plus me-2"></i>{% trans "Add New Student" %}
+                    </a>
+                </div>
+
+                <div class="table-modern">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>{% trans "USN" %}</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "Phone" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td data-label="{% trans 'USN' %}">
+                                    <strong class="text-purple">{{ student.USN }}</strong>
+                                </td>
+                                <td data-label="{% trans 'Name' %}">{{ student.name }}</td>
+                                <td data-label="{% trans 'Email' %}">{{ student.user.email }}</td>
+                                <td data-label="{% trans 'Phone' %}">{{ student.phone }}</td>
+                                <td data-label="{% trans 'Actions' %}">
+                                    <div class="btn-group-custom">
+                                        <a href="{% url 'edit_student' student_id=student.USN %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit me-1"></i> {% trans "Edit" %}
+                                        </a>
+                                        <!--a href="{% url 'delete_student' student_id=student.USN %}" 
+                                           class="btn btn-sm btn-danger"onclick='return confirm("{% trans "Are you sure you want to delete this student?" %}");'>
+                                            <i class="fas fa-trash me-1"></i> {% trans "Delete" %}
+                                        </a-->
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="fas fa-users"></i>
+                                        <h5>{% trans "No students found" %}</h5>
+                                        <p>{% trans "Start by adding your first student to this class" %}</p>
+                                        <a href="{% url 'add_student_to_class' class_id=class_obj.id %}" class="btn-add-modern">
+                                            <i class="fas fa-plus me-2"></i>{% trans "Add New Student" %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

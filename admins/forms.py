@@ -25,11 +25,13 @@ from utils.constant import (
     STUDENT_USN_MAX_LENGTH, USER_NAME_MAX_LENGTH, USER_SEX_MAX_LENGTH,
     USER_ADDRESS_MAX_LENGTH, USER_PHONE_MAX_LENGTH, TEACHER_ID_MAX_LENGTH,
     SEX_CHOICES, DEFAULT_SEX,
+    DAYS_OF_WEEK, TIME_SLOTS,
+    MIN_SEMESTER, MAX_SEMESTER
 )
 
 # Import models
 from students.models import Student
-from teachers.models import Teacher, Assign
+from teachers.models import Teacher, Assign, AssignTime
 from admins.models import User, Dept, Class, Subject
 
 
@@ -92,7 +94,6 @@ class UnifiedLoginForm(forms.Form):
         Return authenticated user
         """
         return self.user_cache
-
 
 
 class AdminLoginForm(forms.Form):
@@ -467,14 +468,14 @@ class AddTeacherForm(forms.ModelForm):
     def clean_id(self):
         """Auto-generate Teacher ID if not provided"""
         teacher_id = self.cleaned_data.get('id')
-        
+
         # If no ID provided, generate automatically
         if not teacher_id:
             # Find the highest existing teacher ID number
             last_teacher = Teacher.objects.filter(
                 id__startswith='T'
             ).order_by('-id').first()
-            
+
             if last_teacher:
                 # Extract number from last ID (e.g., 'T003' -> 3)
                 try:
@@ -484,10 +485,10 @@ class AddTeacherForm(forms.ModelForm):
                     new_number = 1
             else:
                 new_number = 1
-            
+
             # Generate new ID with format T001, T002, etc.
             teacher_id = f'T{new_number:03d}'
-        
+
         # Check if the generated/provided ID already exists
         if Teacher.objects.filter(id=teacher_id).exists():
             # If exists, find next available ID
@@ -495,7 +496,7 @@ class AddTeacherForm(forms.ModelForm):
             while Teacher.objects.filter(id=f'T{counter:03d}').exists():
                 counter += 1
             teacher_id = f'T{counter:03d}'
-        
+
         return teacher_id
 
     def clean_email(self):
@@ -503,6 +504,7 @@ class AddTeacherForm(forms.ModelForm):
         if User.objects.filter(email=email).exists():
             raise ValidationError(_('Email already exists'))
         return email
+
 
 class TeachingAssignmentForm(forms.ModelForm):
     """
@@ -596,3 +598,309 @@ class TeachingAssignmentFilterForm(forms.Form):
         }),
         label=_('Class')
     )
+
+
+class ClassForm(forms.ModelForm):
+    class Meta:
+        model = Class
+        fields = ['id', 'dept', 'section', 'sem', 'is_active']
+        widgets = {
+            'id': forms.TextInput(attrs={'class': 'form-control'}),
+            'dept': forms.Select(attrs={'class': 'form-control'}),
+            'section': forms.TextInput(attrs={'class': 'form-control'}),
+            'sem': forms.NumberInput(attrs={'class': 'form-control', 'min': MIN_SEMESTER, 'max': MAX_SEMESTER}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'id': _('Class ID'),
+            'dept': _('Department'),
+            'section': _('Section'),
+            'sem': _('Semester'),
+            'is_active': _('Active'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Nếu đang update (tức là đã có instance tồn tại), khóa trường 'id'
+        if self.instance and self.instance.pk:
+            self.fields['id'].disabled = True
+
+    def clean_sem(self):
+        sem = self.cleaned_data['sem']
+        if sem < MIN_SEMESTER or sem > MAX_SEMESTER:
+            raise forms.ValidationError("Semester must be between 1 and 3.")
+        return sem
+
+
+class TimetableForm(forms.ModelForm):
+    """
+    Form for managing timetable
+    """
+    assign = forms.ModelChoiceField(
+        queryset=Assign.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Teaching Assignment')
+    )
+
+    period = forms.ChoiceField(
+        choices=TIME_SLOTS,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Period')
+    )
+
+    day = forms.ChoiceField(
+        choices=DAYS_OF_WEEK,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Day of Week')
+    )
+
+    class Meta:
+        model = AssignTime
+        fields = ['assign', 'period', 'day']
+        labels = {
+            'assign': _('Teaching Assignment'),
+            'period': _('Period'),
+            'day': _('Day of Week')
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        assign = cleaned_data.get('assign')
+        period = cleaned_data.get('period')
+        day = cleaned_data.get('day')
+
+        if assign and period and day:
+            if AssignTime.objects.filter(
+                assign=assign,
+                period=period,
+                day=day
+            ).exists():
+                raise forms.ValidationError(
+                    _('This timetable entry already exists!')
+                )
+
+            if AssignTime.objects.filter(
+                period=period,
+                day=day
+            ).exclude(assign=assign).exists():
+                raise forms.ValidationError(
+                    _('This time slot is already occupied by another assignment!')
+                )
+
+        return cleaned_data
+
+
+class TimetableFilterForm(forms.Form):
+    """
+    Form for filtering timetable
+    """
+    class_id = forms.ModelChoiceField(
+        queryset=Class.objects.filter(is_active=True),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select class')
+        }),
+        label=_('Class')
+    )
+
+    teacher = forms.ModelChoiceField(
+        queryset=Teacher.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select teacher')
+        }),
+        label=_('Teacher')
+    )
+
+    day = forms.ChoiceField(
+        choices=[('', _('All'))] + list(DAYS_OF_WEEK),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        }),
+        label=_('Day of Week')
+    )
+
+
+class EditStudentForm(forms.ModelForm):
+    """
+    Form riêng cho việc edit student - không ảnh hưởng AddStudentForm
+    """
+    # User account fields
+    username = forms.CharField(
+        max_length=ADMIN_USERNAME_MAX_LENGTH,
+        widget=forms.TextInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('Enter username'),
+            'required': True
+        }),
+        label=_('Username')
+    )
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('Enter email address'),
+            'required': True
+        }),
+        label=_('Email')
+    )
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('Leave blank to keep current password'),
+            'required': False  # Không bắt buộc khi edit
+        }),
+        label=_('New Password'),
+        required=False
+    )
+
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('Confirm new password'),
+            'required': False  # Không bắt buộc khi edit
+        }),
+        label=_('Confirm New Password'),
+        required=False
+    )
+
+    # Student profile fields
+    USN = forms.CharField(
+        max_length=STUDENT_USN_MAX_LENGTH,
+        widget=forms.TextInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('USN cannot be changed'),
+            'readonly': True,  # Lock USN
+            'style': 'background-color: #f8f9fa; cursor: not-allowed;'
+        }),
+        label=_('USN (Cannot be changed)')
+    )
+
+    name = forms.CharField(
+        max_length=USER_NAME_MAX_LENGTH,
+        widget=forms.TextInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('Enter full name'),
+            'required': True
+        }),
+        label=_('Full Name')
+    )
+
+    sex = forms.ChoiceField(
+        choices=SEX_CHOICES,
+        widget=forms.Select(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'required': True
+        }),
+        label=_('Gender')
+    )
+
+    DOB = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'type': 'date',
+            'required': True
+        }),
+        label=_('Date of Birth')
+    )
+
+    address = forms.CharField(
+        max_length=USER_ADDRESS_MAX_LENGTH,
+        widget=forms.Textarea(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('Enter address'),
+            'rows': 3
+        }),
+        label=_('Address'),
+        required=False
+    )
+
+    phone = forms.CharField(
+        max_length=USER_PHONE_MAX_LENGTH,
+        widget=forms.TextInput(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'placeholder': _('Enter phone number')
+        }),
+        label=_('Phone Number'),
+        required=False
+    )
+
+    class_id = forms.ModelChoiceField(
+        queryset=Class.objects.filter(is_active=True),
+        widget=forms.Select(attrs={
+            'class': FORM_CONTROL_CLASS,
+            'required': True
+        }),
+        label=_('Class'),
+        empty_label=_('Select a class')
+    )
+
+    class Meta:
+        model = Student
+        fields = ['USN', 'name', 'sex', 'DOB', 'address', 'phone', 'class_id']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Nếu đang edit (có instance), set initial values
+        if self.instance and self.instance.pk:
+            self.fields['username'].initial = self.instance.user.username
+            self.fields['email'].initial = self.instance.user.email
+            # USN không thể thay đổi
+            self.fields['USN'].disabled = True
+
+    def clean_password_confirm(self):
+        password = self.cleaned_data.get('password')
+        password_confirm = self.cleaned_data.get('password_confirm')
+
+        # Chỉ validate khi có nhập password mới
+        if password:
+            if password != password_confirm:
+                raise ValidationError(_('Passwords do not match'))
+        return password_confirm
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+
+        # Cho phép giữ nguyên username hiện tại
+        if self.instance and self.instance.pk and username == self.instance.user.username:
+            return username
+
+        # Kiểm tra unique cho username mới
+        if User.objects.filter(username=username).exists():
+            raise ValidationError(_('Username already exists'))
+        return username
+
+    def clean_USN(self):
+        usn = self.cleaned_data.get('USN')
+
+        # Nếu đang edit, luôn trả về USN hiện tại (không cho phép thay đổi)
+        if self.instance and self.instance.pk:
+            return self.instance.USN
+        return usn
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+
+        # Cho phép giữ nguyên email hiện tại
+        if self.instance and self.instance.pk and email == self.instance.user.email:
+            return email
+
+        # Kiểm tra unique cho email mới
+        if User.objects.filter(email=email).exists():
+            raise ValidationError(_('Email already exists'))
+        return email
+

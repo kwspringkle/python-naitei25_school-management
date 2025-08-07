@@ -312,7 +312,7 @@ body {
     background: #fff;
 }
 .table-modern thead th {
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #667eea 100%);
     color: #fff;
     font-weight: 700;
     font-size: 1rem;
@@ -513,3 +513,39 @@ body {
 .w-auto{
     width: auto;
 }
+
+@media (min-width: 768px) {
+    .table-modern th:nth-child(2),
+    .table-modern td:nth-child(2) {
+        width: 50%;
+    }
+}
+
+@media (max-width: 767px) {
+    .table-modern th:nth-child(2),
+    .table-modern td:nth-child(2) {
+        width: 50%;
+    }
+}
+
+    #search-results {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 0;
+    }
+    .search-result-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+    .search-result-item:hover {
+        background-color: #f8f9fa;
+    }
+    .search-result-item.selected {
+        background-color: #e9ecef;
+        font-weight: bold;
+    }
+   
+    
