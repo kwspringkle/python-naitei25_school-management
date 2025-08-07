@@ -17,7 +17,16 @@ from utils.constant import (
     ADMIN_LOGOUT_SUCCESS_MESSAGE,
     PAGE_SIZE
 )
-from .forms import AdminLoginForm, AddStudentForm, AddTeacherForm, TeachingAssignmentForm, TeachingAssignmentFilterForm, TimetableFilterForm, TimetableForm, ClassForm
+from .forms import (
+    AdminLoginForm, 
+    AddStudentForm, 
+    AddTeacherForm, 
+    TeachingAssignmentForm, 
+    TeachingAssignmentFilterForm, 
+    TimetableFilterForm, 
+    TimetableForm, 
+    ClassForm,
+    DepartmentForm)
 
 # Model imports
 from students.models import Student
@@ -523,3 +532,104 @@ def delete_class(request, class_id):
         messages.error(request, _('The class does not exist!'))
     
     return redirect('class_list')
+
+@login_required
+def department_list(request):
+    """
+    View for listing all departments with pagination
+    """
+    departments = Dept.objects.all().order_by('id')
+    
+    # Pagination
+    paginator = Paginator(departments, PAGE_SIZE)
+    page_number = request.GET.get('page')
+    departments_page = paginator.get_page(page_number)
+    
+    context = {
+        'departments': departments_page,
+        'admin_user': request.user,
+        'title': _('Manage Departments'),
+    }
+    return render(request, 'admins/department_list.html', context)
+
+@login_required
+@permission_required('admins.add_dept', raise_exception=True)
+def add_department(request):
+    """
+    View for adding a new department
+    """
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, _('Department has been added successfully!'))
+                return redirect('department_list')
+            except Exception as e:
+                messages.error(request, _('Error creating department: {}').format(str(e)))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = DepartmentForm()
+    
+    context = {
+        'form': form,
+        'admin_user': request.user,
+        'title': _('Add Department'),
+        'submit_text': _('Add Department'),
+    }
+    return render(request, 'admins/department_form.html', context)
+
+@login_required
+@permission_required('admins.change_dept', raise_exception=True)
+def edit_department(request, dept_id):
+    """
+    View for editing a department
+    """
+    try:
+        department = Dept.objects.get(id=dept_id)
+    except Dept.DoesNotExist:
+        messages.error(request, _('The department does not exist!'))
+        return redirect('department_list')
+    
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST, instance=department)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, _('Department has been updated successfully!'))
+                return redirect('department_list')
+            except Exception as e:
+                messages.error(request, _('Error updating department: {}').format(str(e)))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = DepartmentForm(instance=department)
+    
+    context = {
+        'form': form,
+        'department': department,
+        'admin_user': request.user,
+        'title': _('Edit Department'),
+        'submit_text': _('Update Department'),
+    }
+    return render(request, 'admins/department_form.html', context)
+
+@login_required
+@permission_required('admins.delete_dept', raise_exception=True)
+def delete_department(request, dept_id):
+    """
+    View for deleting a department
+    """
+    try:
+        department = Dept.objects.get(id=dept_id)
+        department.delete()
+        messages.success(request, _('Department has been deleted successfully!'))
+    except Dept.DoesNotExist:
+        messages.error(request, _('The department does not exist!'))
+    
+    return redirect('department_list')

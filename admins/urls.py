@@ -22,9 +22,16 @@ urlpatterns = [
     
     # Redirect to login by default
     path('', views.admin_login, name='admin_home'),
+    
     # Class URLs
     path('classes/', views.class_list, name='class_list'),
     path('classes/add/', views.add_class, name='add_class'),
     path('classes/<str:class_id>/edit/', views.edit_class, name='edit_class'),
     path('classes/<str:class_id>/delete/', views.delete_class, name='delete_class'),
+
+    # Deparment URLs
+    path('departments/', views.department_list, name='department_list'),
+    path('departments/add/', views.add_department, name='add_department'),
+    path('departments/<str:dept_id>/edit/', views.edit_department, name='edit_department'),
+    path('departments/<str:dept_id>/delete/', views.delete_department, name='delete_department'),
 ]

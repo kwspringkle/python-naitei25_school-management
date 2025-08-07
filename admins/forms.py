@@ -726,3 +726,28 @@ class TimetableFilterForm(forms.Form):
         }),
         label=_('Day of Week')
     )
+
+class DepartmentForm(forms.ModelForm):
+    class Meta:
+        model = Dept
+        fields = ['id', 'name']
+        widgets = {
+            'id': forms.TextInput(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
+        }
+        labels = {
+            'id': 'Department ID',
+            'name': 'Department Name',
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Nếu đang update (tức là đã có instance tồn tại), khóa trường 'id'
+        if self.instance and self.instance.pk:
+            self.fields['id'].disabled = True
