@@ -298,11 +298,13 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:36
 msgid "Welcome"
-msgstr ""
+msgstr "Welcome"
+msgstr "Welcome"
 
 #: .\teachers\templates\t_homepage.html:50
 msgid "Attendance"
-msgstr ""
+msgstr "Attendance"
+msgstr "Attendance"
 
 #: .\teachers\templates\t_homepage.html:51
 msgid ""
@@ -317,7 +319,8 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:65
 msgid "Marks"
-msgstr ""
+msgstr "Marks"
+msgstr "Marks"
 
 #: .\teachers\templates\t_homepage.html:66
 msgid ""
@@ -332,7 +335,8 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:80
 msgid "TimeTable"
-msgstr ""
+msgstr "TimeTable"
+msgstr "TimeTable"
 
 #: .\teachers\templates\t_homepage.html:81
 msgid ""
@@ -342,7 +346,183 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:84
 msgid "View TimeTable"
-msgstr ""
+msgstr "View TimeTable"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_welcome_message"
+msgstr "Welcome"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_attendance_title"
+msgstr "Attendance"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_attendance_description"
+msgstr "View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted."
+
+#: .\students\templates\students\dashboard.html
+msgid "student_view_attendance"
+msgstr "View Attendance"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_marks_description"
+msgstr "View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam."
+
+#: .\students\templates\students\dashboard.html
+msgid "student_view_marks"
+msgstr "View Marks"
+
+#: .\students\templates\students\dashboard.html
+msgid "student_timetable_description"
+msgstr "View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted."
+
+#: .\students\templates\students\dashboard.html
+msgid "student_view_timetable"
+msgstr "View TimeTable"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted."
+msgstr "View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Attendance"
+msgstr "View Attendance"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam."
+msgstr "View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Marks"
+msgstr "View Marks"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted."
+msgstr "View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted."
+
+#: .\students\templates\students\attendance.html
+msgid "Course ID"
+msgstr "Course ID"
+
+#: .\students\templates\students\attendance.html
+msgid "Course name"
+msgstr "Course name"
+
+#: .\students\templates\students\attendance.html
+msgid "Attended classes"
+msgstr "Attended classes"
+
+#: .\students\templates\students\attendance.html
+msgid "Total classes"
+msgstr "Total classes"
+
+#: .\students\templates\students\attendance.html
+msgid "Attendance %"
+msgstr "Attendance %"
+
+#: .\students\templates\students\attendance.html
+msgid "Classes to attend"
+msgstr "Classes to attend"
+
+#: .\students\templates\students\attendance.html
+msgid "Student has no courses"
+msgstr "Student has no courses"
+
+#: .\students\templates\students\marks.html
+msgid "Internals 1"
+msgstr "Internals 1"
+
+#: .\students\templates\students\marks.html
+msgid "Internals 2"
+msgstr "Internals 2"
+
+#: .\students\templates\students\marks.html
+msgid "Internals 3"
+msgstr "Internals 3"
+
+#: .\students\templates\students\marks.html
+msgid "Event 1"
+msgstr "Event 1"
+
+#: .\students\templates\students\marks.html
+msgid "Event 2"
+msgstr "Event 2"
+
+#: .\students\templates\students\marks.html
+msgid "SEE"
+msgstr "SEE"
+
+#: .\students\templates\students\base.html
+msgid "Home"
+msgstr "Home"
+
+#: .\students\templates\students\base.html
+msgid "Time Table"
+msgstr "Time Table"
+
+#: .\students\templates\students\timetable.html
+msgid "Break"
+msgstr "Break"
+
+#: .\students\templates\students\timetable.html
+msgid "Lunch"
+msgstr "Lunch"
+
+#: .\students\templates\students\dashboard.html
+msgid "Welcome"
+msgstr "Welcome"
+
+#: .\students\templates\students\dashboard.html
+msgid "Attendance"
+msgstr "Attendance"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted."
+msgstr "View the attendance status for each of your courses. The attendance of each course is also displayed as list of classes that were conducted."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Attendance"
+msgstr "View Attendance"
+
+#: .\students\templates\students\dashboard.html
+msgid "Marks"
+msgstr "Marks"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam."
+msgstr "View the marks obtained for each of your courses. These include the marks of 3 internal assessment, 2 events and the Semester End Exam."
+
+#: .\students\templates\students\dashboard.html
+msgid "View Marks"
+msgstr "View Marks"
+
+#: .\students\templates\students\dashboard.html
+msgid "TimeTable"
+msgstr "TimeTable"
+
+#: .\students\templates\students\dashboard.html
+msgid "View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted."
+msgstr "View the timetable in a tabular form. The timetable displays all the courses of the student and the time and day at which they are conducted."
+
+#: .\students\templates\students\dashboard.html
+msgid "View TimeTable"
+msgstr "View TimeTable"
+
+#: .\students\templates\students\dashboard.html
+msgid "Ready to Leave?"
+msgstr "Ready to Leave?"
+
+#: .\students\templates\students\dashboard.html
+msgid "Select \"Logout\" below if you are ready to end your current session."
+msgstr "Select \"Logout\" below if you are ready to end your current session."
+
+#: .\students\templates\students\dashboard.html
+msgid "Cancel"
+msgstr "Cancel"
+
+#: .\students\templates\students\dashboard.html
+msgid "Logout"
+msgstr "Logout"
 
 #: .\teachers\templates\t_homepage.html:95
 msgid "Reports"

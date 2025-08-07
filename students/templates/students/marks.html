@@ -1,0 +1,52 @@
+{% extends 'students/base.html' %}
+{% load static %} 
+{% load i18n %} 
+{% block title %}
+{% trans "Marks" %} - CollegeERP
+{% endblock %} 
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">
+    <i class="fas fa-table"></i>
+    <b>{% trans "Marks" %}</b>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table
+        class="table table-bordered"
+        id="dataTable"
+        width="100%"
+        cellspacing="0"
+      >
+        <thead>
+          <tr>
+            <th>{% trans "Course ID" %}</th>
+            <th>{% trans "Course name" %}</th>
+            <th>{% trans "Internals 1" %}</th>
+            <th>{% trans "Internals 2" %}</th>
+            <th>{% trans "Internals 3" %}</th>
+            <th>{% trans "Event 1" %}</th>
+            <th>{% trans "Event 2" %}</th>
+            <th>{% trans "SEE" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for data in marks_data %}
+          <tr>
+            <td>{{ data.subject.id }}</td>
+            <td>{{ data.subject.name }}</td>
+            {% for mark in data.marks %}
+            <td>{{ mark.marks1 }}</td>
+            {% endfor %}
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8">{% trans "Student has no courses" %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

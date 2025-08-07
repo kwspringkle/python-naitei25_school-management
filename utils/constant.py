@@ -63,6 +63,10 @@ TIME_SLOTS = (
     ('4:30 - 5:30', '4:30 - 5:30'),
 )
 
+# Break periods
+BREAK_PERIOD = 'Break'
+LUNCH_PERIOD = 'Lunch'
+
 # Days of week choices
 DAYS_OF_WEEK = (
     ('Monday', 'Monday'),
@@ -217,7 +221,8 @@ DEFAULT_LANGUAGE_NAME = 'English'
 # URL names for redirects
 ADMIN_DASHBOARD_URL = 'admin_dashboard'
 TEACHER_DASHBOARD_URL = 'teacher_dashboard'
-STUDENT_DASHBOARD_URL = 'student_dashboard'
+STUDENT_DASHBOARD_URL = 'students:student_dashboard'
+STUDENT_DASHBOARD_URL = 'students:student_dashboard'
 UNIFIED_LOGIN_URL = 'unified_login'
 
 # Template paths
@@ -336,4 +341,3 @@ CIE_STANDARD = 25
 # Page size constants
 PAGE_SIZE = 10  # Default page size
 PAGE_SIZE_OPTIONS = [10, 25, 50, 100]  # Available page size options
-
