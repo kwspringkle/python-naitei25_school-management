@@ -1,0 +1,475 @@
+/* Teaching Assignments Modern Styles */
+
+.container-fluid {
+    margin-top: 56px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+/* Header Styling */
+.d-sm-flex.align-items-center {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.h3.text-gray-800 {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    font-size: 2.2rem;
+}
+
+.btn-outline-secondary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    border-radius: 25px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+}
+
+.badge-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    padding: 1.5rem;
+    border: none;
+}
+
+.card-header h6 {
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Table Styling */
+.table {
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 0;
+    table-layout: fixed;
+}
+
+.table thead th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    padding: 1.2rem 1rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.table tbody tr:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    transform: scale(1.01);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.table tbody td {
+    padding: 1.2rem 1rem;
+    border: none;
+    vertical-align: middle;
+    text-align: center;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+/* Column-specific styling */
+.table tbody td:nth-child(1) {
+    /* No. column */
+    text-align: center;
+    width: 5%;
+}
+
+.table tbody td:nth-child(2) {
+    /* Teacher column */
+    text-align: left;
+    width: 25%;
+}
+
+.table tbody td:nth-child(3) {
+    /* Subject column - LEFT ALIGNED */
+    text-align: left;
+    width: 25%;
+}
+
+.table tbody td:nth-child(4) {
+    /* Class column */
+    text-align: center;
+    width: 20%;
+}
+
+.table tbody td:nth-child(5) {
+    /* Department column */
+    text-align: center;
+    width: 15%;
+}
+
+.table tbody td:nth-child(6) {
+    /* Actions column */
+    text-align: center;
+    width: 10%;
+}
+
+/* Avatar and Content Styling */
+.d-flex.align-items-center {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.d-flex.align-items-center .avatar-sm {
+    flex-shrink: 0;
+    margin-right: 0.75rem;
+}
+
+.d-flex.align-items-center > div:last-child {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+
+.d-flex.align-items-center .font-weight-bold {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.d-flex.align-items-center small {
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Avatar Styling */
+.avatar-sm {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.avatar-sm:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.bg-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+}
+
+.bg-success {
+    background: linear-gradient(45deg, #56ab2f, #a8e6cf) !important;
+}
+
+/* Badge Styling */
+.badge-lg {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.badge-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.badge-info {
+    background: linear-gradient(45deg, #36d1dc, #5b86e5) !important;
+    color: white;
+}
+
+.badge-secondary {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    color: white;
+}
+
+/* Button Group Styling */
+.btn-group-sm {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+}
+
+.btn-group-sm .btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.btn-outline-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(45deg, #764ba2, #667eea);
+    color: white;
+}
+
+.btn-outline-danger {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    border: none;
+    color: white;
+}
+
+.btn-outline-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+    color: white;
+}
+
+/* Form Styling */
+.form-control {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    background: white;
+}
+
+.form-label {
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+/* DataTables Customization */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1.5rem;
+}
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.dataTables_wrapper .dataTables_info {
+    padding-top: 1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    margin: 0 2px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Dropdown Styling */
+.dropdown-menu {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.dropdown-item {
+    border-radius: 10px;
+    margin: 2px;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    transform: translateX(5px);
+}
+
+/* Empty State Styling */
+.text-center.py-4 {
+    padding: 3rem !important;
+}
+
+.text-muted i {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem 0;
+    }
+    
+    .d-sm-flex.align-items-center {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .h3.text-gray-800 {
+        font-size: 1.8rem;
+    }
+    
+    .avatar-sm {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+    
+    .badge-lg {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    .table {
+        table-layout: auto;
+    }
+    
+    .d-flex.align-items-center .font-weight-bold,
+    .d-flex.align-items-center small {
+        white-space: normal;
+        word-wrap: break-word;
+    }
+}
+
+/* Animation for page load */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Hover effects for interactive elements */
+.btn, .badge, .avatar-sm, .table tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

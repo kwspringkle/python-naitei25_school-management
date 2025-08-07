@@ -63,16 +63,31 @@
                 {% trans "Quick Actions" %}
             </h4>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <a href="{% url 'add_student' %}" class="action-btn btn-students">
+                        <i class="fas fa-user-graduate me-2"></i>
                         {% trans "Add Student" %}
                     </a>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <a href="{% url 'add_teacher' %}" class="action-btn btn-teachers">
+                        <i class="fas fa-user-tie me-2"></i>
                         {% trans "Add Teacher" %}
                     </a>
-                </div>  
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'teaching_assignments' %}" class="action-btn btn-assignments">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>
+                        {% trans "Teaching Assignments" %}
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="#" class="action-btn btn-timetable">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {% trans "Timetable" %}
+                    </a>
+                </div>
+                 
             </div>
         </div>
     </div>

@@ -348,3 +348,11 @@ DASHBOARD_TIMETABLE_DESCRIPTION = _("View the timetable in a tabular form. The t
 DASHBOARD_ATTENDANCE_BUTTON = _("View Attendance")
 DASHBOARD_MARKS_BUTTON = _("View Marks")
 DASHBOARD_TIMETABLE_BUTTON = _("View TimeTable")
+=======
+# PAGE CONSTANTS
+# =============================================================================
+
+# Page size constants
+PAGE_SIZE = 10  # Default page size
+PAGE_SIZE_OPTIONS = [10, 25, 50, 100]  # Available page size options
+
