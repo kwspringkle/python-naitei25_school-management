@@ -299,9 +299,11 @@ msgstr ""
 #: .\teachers\templates\t_homepage.html:36
 msgid "Welcome"
 msgstr "Welcome"
+msgstr "Welcome"
 
 #: .\teachers\templates\t_homepage.html:50
 msgid "Attendance"
+msgstr "Attendance"
 msgstr "Attendance"
 
 #: .\teachers\templates\t_homepage.html:51
@@ -318,6 +320,7 @@ msgstr ""
 #: .\teachers\templates\t_homepage.html:65
 msgid "Marks"
 msgstr "Marks"
+msgstr "Marks"
 
 #: .\teachers\templates\t_homepage.html:66
 msgid ""
@@ -332,6 +335,7 @@ msgstr ""
 
 #: .\teachers\templates\t_homepage.html:80
 msgid "TimeTable"
+msgstr "TimeTable"
 msgstr "TimeTable"
 
 #: .\teachers\templates\t_homepage.html:81

@@ -222,6 +222,7 @@ DEFAULT_LANGUAGE_NAME = 'English'
 ADMIN_DASHBOARD_URL = 'admin_dashboard'
 TEACHER_DASHBOARD_URL = 'teacher_dashboard'
 STUDENT_DASHBOARD_URL = 'students:student_dashboard'
+STUDENT_DASHBOARD_URL = 'students:student_dashboard'
 UNIFIED_LOGIN_URL = 'unified_login'
 
 # Template paths
@@ -333,4 +334,10 @@ TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE = True  # Check if teacher has subject knowl
 ATTENDANCE_STANDARD = 75
 CIE_STANDARD = 25
 
+# =============================================================================
+# PAGE CONSTANTS
+# =============================================================================
 
+# Page size constants
+PAGE_SIZE = 10  # Default page size
+PAGE_SIZE_OPTIONS = [10, 25, 50, 100]  # Available page size options
