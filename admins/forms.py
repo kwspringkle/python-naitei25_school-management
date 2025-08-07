@@ -25,11 +25,12 @@ from utils.constant import (
     STUDENT_USN_MAX_LENGTH, USER_NAME_MAX_LENGTH, USER_SEX_MAX_LENGTH,
     USER_ADDRESS_MAX_LENGTH, USER_PHONE_MAX_LENGTH, TEACHER_ID_MAX_LENGTH,
     SEX_CHOICES, DEFAULT_SEX,
+    DAYS_OF_WEEK, TIME_SLOTS
 )
 
 # Import models
 from students.models import Student
-from teachers.models import Teacher, Assign
+from teachers.models import Teacher, Assign, AssignTime
 from admins.models import User, Dept, Class, Subject
 
 
@@ -595,4 +596,135 @@ class TeachingAssignmentFilterForm(forms.Form):
             'placeholder': _('Select class')
         }),
         label=_('Class')
+    )
+
+class ClassForm(forms.ModelForm):
+    class Meta:
+        model = Class
+        fields = ['id', 'dept', 'section', 'sem', 'is_active']
+        widgets = {
+            'id': forms.TextInput(attrs={'class': 'form-control'}),
+            'dept': forms.Select(attrs={'class': 'form-control'}),
+            'section': forms.TextInput(attrs={'class': 'form-control'}),
+            'sem': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 8}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'id': 'Class ID',
+            'dept': 'Department',
+            'section': 'Section',
+            'sem': 'Semester',
+            'is_active': 'Active',
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Nếu đang update (tức là đã có instance tồn tại), khóa trường 'id'
+        if self.instance and self.instance.pk:
+            self.fields['id'].disabled = True
+            
+    def clean_sem(self):
+        sem = self.cleaned_data['sem']
+        if sem < 1 or sem > 8:
+            raise forms.ValidationError("Semester must be between 1 and 8.")
+        return sem
+
+
+
+class TimetableForm(forms.ModelForm):
+    """
+    Form for managing timetable
+    """
+    assign = forms.ModelChoiceField(
+        queryset=Assign.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Teaching Assignment')
+    )
+    
+    period = forms.ChoiceField(
+        choices=TIME_SLOTS,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Period')
+    )
+    
+    day = forms.ChoiceField(
+        choices=DAYS_OF_WEEK,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Day of Week')
+    )
+
+    class Meta:
+        model = AssignTime
+        fields = ['assign', 'period', 'day']
+        labels = {
+            'assign': _('Teaching Assignment'),
+            'period': _('Period'),
+            'day': _('Day of Week')
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        assign = cleaned_data.get('assign')
+        period = cleaned_data.get('period')
+        day = cleaned_data.get('day')
+
+        if assign and period and day:
+            if AssignTime.objects.filter(
+                assign=assign,
+                period=period,
+                day=day
+            ).exists():
+                raise forms.ValidationError(
+                    _('This timetable entry already exists!')
+                )
+
+            if AssignTime.objects.filter(
+                period=period,
+                day=day
+            ).exclude(assign=assign).exists():
+                raise forms.ValidationError(
+                    _('This time slot is already occupied by another assignment!')
+                )
+
+        return cleaned_data
+
+class TimetableFilterForm(forms.Form):
+    """
+    Form for filtering timetable
+    """
+    class_id = forms.ModelChoiceField(
+        queryset=Class.objects.filter(is_active=True),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select class')
+        }),
+        label=_('Class')
+    )
+
+    teacher = forms.ModelChoiceField(
+        queryset=Teacher.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select teacher')
+        }),
+        label=_('Teacher')
+    )
+
+    day = forms.ChoiceField(
+        choices=[('', _('All'))] + list(DAYS_OF_WEEK),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        }),
+        label=_('Day of Week')
     )

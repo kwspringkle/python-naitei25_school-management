@@ -312,7 +312,7 @@ body {
     background: #fff;
 }
 .table-modern thead th {
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #667eea 100%);
     color: #fff;
     font-weight: 700;
     font-size: 1rem;
@@ -512,4 +512,18 @@ body {
 }
 .w-auto{
     width: auto;
+}
+
+@media (min-width: 768px) {
+    .table-modern th:nth-child(2),
+    .table-modern td:nth-child(2) {
+        width: 50%;
+    }
+}
+
+@media (max-width: 767px) {
+    .table-modern th:nth-child(2),
+    .table-modern td:nth-child(2) {
+        width: 50%;
+    }
 }

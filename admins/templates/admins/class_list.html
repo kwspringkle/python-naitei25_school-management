@@ -1,0 +1,115 @@
+{% extends 'admins/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="welcome-card">
+        <h2>{{ title }}</h2>
+        <p class="mb-0 opacity-75">{% trans "View and manage all classes" %}</p>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="action-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">{% trans "Classes" %}</h4>
+                    <a href="{% url 'add_class' %}" class="btn-add-modern">
+                        <i class="fas fa-plus me-2"></i>{% trans "Add New Class" %}
+                    </a>
+                </div>
+
+                <div class="table-modern">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Class ID" %}</th>
+                                <th>{% trans "Department" %}</th>
+                                <th>{% trans "Section" %}</th>
+                                <th>{% trans "Semester" %}</th>
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class in classes %}
+                            <tr>
+                                <td data-label="{% trans 'Class ID' %}">
+                                    <strong class="text-purple">{{ class.id }}</strong>
+                                </td>
+                                <td data-label="{% trans 'Department' %}">{{ class.dept }}</td>
+                                <td data-label="{% trans 'Section' %}">
+                                    <span class="badge badge-custom bg-primary">{{ class.section }}</span>
+                                </td>
+                                <td data-label="{% trans 'Semester' %}">{{ class.sem }}</td>
+                                <td data-label="{% trans 'Active' %}">
+                                    {% if class.is_active %}
+                                        <span class="badge bg-success">{% trans "Yes" %}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{% trans "No" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="{% trans 'Actions' %}">
+                                    <div class="btn-group-custom">
+                                        <a href="{% url 'edit_class' class.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit me-1"></i> {% trans "Edit" %}
+                                        </a>
+                                        <a href="{% url 'delete_class' class.id %}" 
+                                           class="btn btn-sm btn-danger"onclick='return confirm("{% trans "Are you sure you want to delete this class?" %}");'>
+                                            <i class="fas fa-trash me-1"></i> {% trans "Delete" %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                        <h5>{% trans "No classes found" %}</h5>
+                                        <p>{% trans "Start by creating your first class" %}</p>
+                                        <a href="{% url 'add_class' %}" class="btn-add-modern">
+                                            <i class="fas fa-plus me-2"></i>{% trans "Add New Class" %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if classes.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination-modern">
+                        {% if classes.has_previous %}
+                        <li>
+                            <a class="page-link" href="?page={{ classes.previous_page_number }}">
+                                <i class="fas fa-chevron-left me-1"></i>{% trans "Previous" %}
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in classes.paginator.page_range %}
+                        <li {% if classes.number == num %}class="active"{% endif %}>
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if classes.has_next %}
+                        <li>
+                            <a class="page-link" href="?page={{ classes.next_page_number }}">
+                                {% trans "Next" %}<i class="fas fa-chevron-right ms-1"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
