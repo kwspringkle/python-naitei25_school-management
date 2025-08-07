@@ -17,8 +17,8 @@ from utils.constant import (
     ADMIN_LOGOUT_SUCCESS_MESSAGE,
     PAGE_SIZE
 )
-from .forms import AdminLoginForm, AddStudentForm, AddTeacherForm, TeachingAssignmentForm, TeachingAssignmentFilterForm, TimetableFilterForm, TimetableForm
-from .forms import ClassForm
+from .forms import AdminLoginForm, AddStudentForm, AddTeacherForm, TeachingAssignmentForm, TeachingAssignmentFilterForm, TimetableFilterForm, TimetableForm, ClassForm
+
 # Model imports
 from students.models import Student
 from teachers.models import Teacher, Assign, AssignTime

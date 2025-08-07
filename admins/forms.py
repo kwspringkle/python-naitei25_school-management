@@ -628,8 +628,6 @@ class ClassForm(forms.ModelForm):
             raise forms.ValidationError("Semester must be between 1 and 8.")
         return sem
 
-
-
 class TimetableForm(forms.ModelForm):
     """
     Form for managing timetable
