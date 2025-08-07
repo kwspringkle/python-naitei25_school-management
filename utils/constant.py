@@ -328,3 +328,12 @@ TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE = True  # Check if teacher has subject knowl
 
 ATTENDANCE_STANDARD = 75
 CIE_STANDARD = 25
+
+# =============================================================================
+# PAGE CONSTANTS
+# =============================================================================
+
+# Page size constants
+PAGE_SIZE = 10  # Default page size
+PAGE_SIZE_OPTIONS = [10, 25, 50, 100]  # Available page size options
+

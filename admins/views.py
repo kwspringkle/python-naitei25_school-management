@@ -1,26 +1,29 @@
 # Django imports
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_protect
 from django.utils.translation import gettext_lazy as _
 from admins.models import User
 from django.db import transaction
+from django.core.paginator import Paginator
 
 # Local application imports
 from utils.constant import (
     ADMIN_DATETIME_FORMAT,
     ADMIN_WELCOME_MESSAGE,
-    ADMIN_LOGOUT_SUCCESS_MESSAGE
+    ADMIN_LOGOUT_SUCCESS_MESSAGE,
+    PAGE_SIZE
 )
-from .forms import AdminLoginForm, AddStudentForm, AddTeacherForm
+from .forms import AdminLoginForm, AddStudentForm, AddTeacherForm, TeachingAssignmentForm, TeachingAssignmentFilterForm
 
 # Model imports
 from students.models import Student
-from teachers.models import Teacher
+from teachers.models import Teacher, Assign
 from admins.models import User, Dept, Subject, Class
+
 
 
 @csrf_protect
@@ -204,3 +207,111 @@ def add_teacher(request):
         'admin_user': request.user,
     }
     return render(request, 'admins/add_teacher.html', context)
+
+@login_required
+def teaching_assignments(request):
+    """
+    View for managing teaching assignments
+    """
+    # Handle filter form
+    filter_form = TeachingAssignmentFilterForm(request.GET)
+    assignments = Assign.objects.all()
+    
+    if filter_form.is_valid():
+        teacher = filter_form.cleaned_data.get('teacher')
+        subject = filter_form.cleaned_data.get('subject')
+        class_id = filter_form.cleaned_data.get('class_id')
+        
+        if teacher:
+            assignments = assignments.filter(teacher=teacher)
+        if subject:
+            assignments = assignments.filter(subject=subject)
+        if class_id:
+            assignments = assignments.filter(class_id=class_id)
+    
+    # Pagination
+    paginator = Paginator(assignments, PAGE_SIZE)  # 10 entries per page
+    page_number = request.GET.get('page')
+    assignments = paginator.get_page(page_number)
+    
+    context = {
+        'assignments': assignments,
+        'filter_form': filter_form,
+        'admin_user': request.user,
+    }
+    return render(request, 'admins/teaching_assignments.html', context)
+
+@login_required
+@permission_required('assign.add_assign', raise_exception=True)
+def add_teaching_assignment(request):
+    """
+    View for adding a new teaching assignment
+    """
+    if request.method == 'POST':
+        form = TeachingAssignmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _('Teaching assignment has been added successfully!'))
+            return redirect('teaching_assignments')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = TeachingAssignmentForm()
+    
+    context = {
+        'form': form,
+        'admin_user': request.user,
+        'title': _('Add Teaching Assignment')
+    }
+    return render(request, 'admins/teaching_assignment_form.html', context)
+
+@login_required
+@permission_required('assign.change_assign', raise_exception=True)
+def edit_teaching_assignment(request, assignment_id):
+    """
+    View for editing a teaching assignment
+    """
+    try:
+        assignment = Assign.objects.get(id=assignment_id)
+    except Assign.DoesNotExist:
+        messages.error(request, _('The teaching assignment does not exist!'))
+        return redirect('teaching_assignments')
+    
+    if request.method == 'POST':
+        form = TeachingAssignmentForm(request.POST, instance=assignment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _('Teaching assignment has been updated successfully!'))
+            return redirect('teaching_assignments')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = TeachingAssignmentForm(instance=assignment)
+    
+    context = {
+        'form': form,
+        'assignment': assignment,
+        'admin_user': request.user,
+        'title': _('Edit Teaching Assignment')
+    }
+    return render(request, 'admins/teaching_assignment_form.html', context)
+
+
+@login_required
+@permission_required('assign.delete_assign', raise_exception=True)
+def delete_teaching_assignment(request, assignment_id):
+    """
+    View for deleting a teaching assignment
+    """
+    try:
+        assignment = Assign.objects.get(id=assignment_id)
+        assignment.delete()
+        messages.success(request, _('Teaching assignment has been deleted successfully!'))
+    except Assign.DoesNotExist:
+        messages.error(request, _('The teaching assignment does not exist!'))
+    
+    return redirect('teaching_assignments')

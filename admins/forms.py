@@ -29,9 +29,8 @@ from utils.constant import (
 
 # Import models
 from students.models import Student
-from teachers.models import Teacher
-from admins.models import User, Dept, Class
-
+from teachers.models import Teacher, Assign
+from admins.models import User, Dept, Class, Subject
 
 
 class UnifiedLoginForm(forms.Form):
@@ -504,3 +503,96 @@ class AddTeacherForm(forms.ModelForm):
         if User.objects.filter(email=email).exists():
             raise ValidationError(_('Email already exists'))
         return email
+
+class TeachingAssignmentForm(forms.ModelForm):
+    """
+    Form for managing teaching assignments
+    """
+    teacher = forms.ModelChoiceField(
+        queryset=Teacher.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Teacher')
+    )
+
+    subject = forms.ModelChoiceField(
+        queryset=Subject.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Subject')
+    )
+
+    class_id = forms.ModelChoiceField(
+        queryset=Class.objects.filter(is_active=True),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Class')
+    )
+
+    class Meta:
+        model = Assign
+        fields = ['teacher', 'subject', 'class_id']
+        labels = {
+            'teacher': _('Teacher'),
+            'subject': _('Subject'),
+            'class_id': _('Class')
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        teacher = cleaned_data.get('teacher')
+        subject = cleaned_data.get('subject')
+        class_id = cleaned_data.get('class_id')
+
+        if teacher and subject and class_id:
+            if Assign.objects.filter(
+                teacher=teacher,
+                subject=subject,
+                class_id=class_id
+            ).exists():
+                raise forms.ValidationError(
+                    _('This assignment already exists!')
+                )
+
+        return cleaned_data
+
+
+class TeachingAssignmentFilterForm(forms.Form):
+    """
+    Form for filtering teaching assignments
+    """
+    teacher = forms.ModelChoiceField(
+        queryset=Teacher.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select teacher')
+        }),
+        label=_('Teacher')
+    )
+
+    subject = forms.ModelChoiceField(
+        queryset=Subject.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select subject')
+        }),
+        label=_('Subject')
+    )
+
+    class_id = forms.ModelChoiceField(
+        queryset=Class.objects.filter(is_active=True),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select class')
+        }),
+        label=_('Class')
+    )
