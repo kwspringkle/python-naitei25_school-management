@@ -25,11 +25,12 @@ from utils.constant import (
     STUDENT_USN_MAX_LENGTH, USER_NAME_MAX_LENGTH, USER_SEX_MAX_LENGTH,
     USER_ADDRESS_MAX_LENGTH, USER_PHONE_MAX_LENGTH, TEACHER_ID_MAX_LENGTH,
     SEX_CHOICES, DEFAULT_SEX,
+    DAYS_OF_WEEK, TIME_SLOTS
 )
 
 # Import models
 from students.models import Student
-from teachers.models import Teacher, Assign
+from teachers.models import Teacher, Assign, AssignTime
 from admins.models import User, Dept, Class, Subject
 
 
@@ -595,4 +596,104 @@ class TeachingAssignmentFilterForm(forms.Form):
             'placeholder': _('Select class')
         }),
         label=_('Class')
+    )
+
+
+class TimetableForm(forms.ModelForm):
+    """
+    Form for managing timetable
+    """
+    assign = forms.ModelChoiceField(
+        queryset=Assign.objects.all(),
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Teaching Assignment')
+    )
+    
+    period = forms.ChoiceField(
+        choices=TIME_SLOTS,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Period')
+    )
+    
+    day = forms.ChoiceField(
+        choices=DAYS_OF_WEEK,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        label=_('Day of Week')
+    )
+
+    class Meta:
+        model = AssignTime
+        fields = ['assign', 'period', 'day']
+        labels = {
+            'assign': _('Teaching Assignment'),
+            'period': _('Period'),
+            'day': _('Day of Week')
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        assign = cleaned_data.get('assign')
+        period = cleaned_data.get('period')
+        day = cleaned_data.get('day')
+
+        if assign and period and day:
+            if AssignTime.objects.filter(
+                assign=assign,
+                period=period,
+                day=day
+            ).exists():
+                raise forms.ValidationError(
+                    _('This timetable entry already exists!')
+                )
+
+            if AssignTime.objects.filter(
+                period=period,
+                day=day
+            ).exclude(assign=assign).exists():
+                raise forms.ValidationError(
+                    _('This time slot is already occupied by another assignment!')
+                )
+
+        return cleaned_data
+
+class TimetableFilterForm(forms.Form):
+    """
+    Form for filtering timetable
+    """
+    class_id = forms.ModelChoiceField(
+        queryset=Class.objects.filter(is_active=True),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select class')
+        }),
+        label=_('Class')
+    )
+
+    teacher = forms.ModelChoiceField(
+        queryset=Teacher.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': _('Select teacher')
+        }),
+        label=_('Teacher')
+    )
+
+    day = forms.ChoiceField(
+        choices=[('', _('All'))] + list(DAYS_OF_WEEK),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        }),
+        label=_('Day of Week')
     )
