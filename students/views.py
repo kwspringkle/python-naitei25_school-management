@@ -14,6 +14,7 @@ from utils.constant import (
     TIMETABLE_DAYS_COUNT, TIMETABLE_PERIODS_COUNT, TIMETABLE_DEFAULT_VALUE,
     TIMETABLE_SKIP_PERIODS
 )
+from datetime import datetime, timedelta, date
 
 
 def _check_student_access(request):
@@ -166,7 +167,7 @@ def student_marks_list(request, student_usn):
 @login_required
 def student_timetable(request, class_id):
     """
-    View timetable for student's class
+    View timetable for student's class (weekly view)
     """
     # Check if user is a student
     is_student, redirect_response = _check_student_access(request)
@@ -186,8 +187,28 @@ def student_timetable(request, class_id):
     # Get all assignments for this class
     assignments = Assign.objects.filter(class_id=class_obj)
     
+    # Parse week_start (YYYY-MM-DD). Default to current date's Monday
+    week_start_str = request.GET.get('week_start')
+    try:
+        base_date = datetime.strptime(week_start_str, "%Y-%m-%d").date() if week_start_str else date.today()
+    except ValueError:
+        base_date = date.today()
+
+    # Compute Monday as start of the week
+    monday_start = base_date - timedelta(days=base_date.weekday())
+
+    # Create display week days (Monday to Saturday) with dates
+    days = [day[0] for day in DAYS_OF_WEEK]
+    day_to_date = {}
+    for idx, day_name in enumerate(days):
+        day_date = monday_start + timedelta(days=idx)
+        day_to_date[day_name] = day_date.strftime('%Y-%m-%d')
+
+    # Previous/Next week navigation
+    prev_week_start = (monday_start - timedelta(days=7)).strftime('%Y-%m-%d')
+    next_week_start = (monday_start + timedelta(days=7)).strftime('%Y-%m-%d')
+
     # Create timetable matrix using constants
-    days = [day[0] for day in DAYS_OF_WEEK]  # Get day names from constants
     time_slots = [slot[0] for slot in TIME_SLOTS]  # Get time slot names from constants
     
     # Add break and lunch periods using constants
@@ -224,7 +245,11 @@ def student_timetable(request, class_id):
         'class_obj': class_obj,
         'timetable': timetable,
         'days': days,
+        'day_to_date': day_to_date,
         'time_slots': time_slots,
+        'week_start': monday_start.strftime('%Y-%m-%d'),
+        'prev_week_start': prev_week_start,
+        'next_week_start': next_week_start,
     }
     
     return render(request, 'students/timetable.html', context)
