@@ -630,8 +630,7 @@ class ClassForm(forms.ModelForm):
         if sem < MIN_SEMESTER or sem > MAX_SEMESTER:
             raise forms.ValidationError("Semester must be between 1 and 3.")
         return sem
-
-
+      
 class TimetableForm(forms.ModelForm):
     """
     Form for managing timetable
@@ -644,7 +643,6 @@ class TimetableForm(forms.ModelForm):
         }),
         label=_('Teaching Assignment')
     )
-
     period = forms.ChoiceField(
         choices=TIME_SLOTS,
         widget=forms.Select(attrs={
@@ -653,7 +651,6 @@ class TimetableForm(forms.ModelForm):
         }),
         label=_('Period')
     )
-
     day = forms.ChoiceField(
         choices=DAYS_OF_WEEK,
         widget=forms.Select(attrs={
@@ -698,7 +695,6 @@ class TimetableForm(forms.ModelForm):
 
         return cleaned_data
 
-
 class TimetableFilterForm(forms.Form):
     """
     Form for filtering timetable
@@ -731,7 +727,6 @@ class TimetableFilterForm(forms.Form):
         }),
         label=_('Day of Week')
     )
-
 
 class EditStudentForm(forms.ModelForm):
     """

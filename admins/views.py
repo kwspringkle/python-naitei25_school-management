@@ -329,7 +329,6 @@ def delete_teaching_assignment(request, assignment_id):
 
     return redirect('teaching_assignments')
 
-
 @login_required
 def timetable(request):
     """
@@ -440,7 +439,6 @@ def delete_timetable_entry(request, entry_id):
         messages.error(request, _('The timetable entry does not exist!'))
 
     return redirect('timetable')
-
 
 @login_required
 def class_list(request):
@@ -743,3 +741,4 @@ def delete_student(request, student_id):
         messages.error(request, _('The student does not exist!'))
 
     return redirect('edit_class', class_id=class_id)
+
