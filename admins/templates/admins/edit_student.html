@@ -1,0 +1,87 @@
+{% extends 'admins/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="welcome-card">
+        <h2>{{ title }}</h2>
+        <p class="mb-0 opacity-75">{% trans "Update the details for the student" %}</p>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="action-card">
+                <form method="post">
+                    {% csrf_token %}
+                    <!-- Hidden fields for username and password -->
+                    <input type="hidden" name="{{ form.username.name }}" value="{{ form.username.value }}">
+                    <input type="hidden" name="{{ form.password.name }}" value="{{ form.password.value|default_if_none:'' }}">
+
+                    <!-- Visible fields -->
+                    <div class="mb-3">
+                        <label for="{{ form.USN.id_for_label }}" class="form-label">{{ form.USN.label }}</label>
+                        {{ form.USN }}
+                        {% if form.USN.errors %}
+                        <div class="text-danger">{{ form.USN.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="text-danger">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="text-danger">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.sex.id_for_label }}" class="form-label">{{ form.sex.label }}</label>
+                        {{ form.sex }}
+                        {% if form.sex.errors %}
+                        <div class="text-danger">{{ form.sex.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.DOB.id_for_label }}" class="form-label">{{ form.DOB.label }}</label>
+                        {{ form.DOB }}
+                        {% if form.DOB.errors %}
+                        <div class="text-danger">{{ form.DOB.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">{{ form.address.label }}</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <div class="text-danger">{{ form.address.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div class="text-danger">{{ form.phone.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.class_id.id_for_label }}" class="form-label">{{ form.class_id.label }}</label>
+                        {{ form.class_id }}
+                        {% if form.class_id.errors %}
+                        <div class="text-danger">{{ form.class_id.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
+                    <a href="{% url 'edit_class' class_id=student.class_id.id %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

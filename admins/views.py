@@ -9,21 +9,28 @@ from django.utils.translation import gettext_lazy as _
 from admins.models import User
 from django.db import transaction
 from django.core.paginator import Paginator
-
+from django.urls import reverse
 # Local application imports
 from utils.constant import (
     ADMIN_DATETIME_FORMAT,
     ADMIN_WELCOME_MESSAGE,
     ADMIN_LOGOUT_SUCCESS_MESSAGE,
-    PAGE_SIZE
+    PAGE_SIZE, ZERO 
 )
-from .forms import AdminLoginForm, AddStudentForm, AddTeacherForm, TeachingAssignmentForm, TeachingAssignmentFilterForm, TimetableFilterForm, TimetableForm
-
+from .forms import (
+    AdminLoginForm,
+    AddStudentForm,
+    AddTeacherForm,
+    TeachingAssignmentForm,
+    TeachingAssignmentFilterForm,
+    TimetableFilterForm,
+    TimetableForm,
+    ClassForm,
+    EditStudentForm)
 # Model imports
-from students.models import Student
-from teachers.models import Teacher, Assign, AssignTime
+from students.models import Student, Attendance, StudentSubject, AttendanceTotal
+from teachers.models import Teacher, Assign, AssignTime, Marks
 from admins.models import User, Dept, Subject, Class
-
 
 
 @csrf_protect
@@ -208,6 +215,7 @@ def add_teacher(request):
     }
     return render(request, 'admins/add_teacher.html', context)
 
+
 @login_required
 def teaching_assignments(request):
     """
@@ -216,30 +224,31 @@ def teaching_assignments(request):
     # Handle filter form
     filter_form = TeachingAssignmentFilterForm(request.GET)
     assignments = Assign.objects.all()
-    
+
     if filter_form.is_valid():
         teacher = filter_form.cleaned_data.get('teacher')
         subject = filter_form.cleaned_data.get('subject')
         class_id = filter_form.cleaned_data.get('class_id')
-        
+
         if teacher:
             assignments = assignments.filter(teacher=teacher)
         if subject:
             assignments = assignments.filter(subject=subject)
         if class_id:
             assignments = assignments.filter(class_id=class_id)
-    
+
     # Pagination
     paginator = Paginator(assignments, PAGE_SIZE)  # 10 entries per page
     page_number = request.GET.get('page')
     assignments = paginator.get_page(page_number)
-    
+
     context = {
         'assignments': assignments,
         'filter_form': filter_form,
         'admin_user': request.user,
     }
     return render(request, 'admins/teaching_assignments.html', context)
+
 
 @login_required
 @permission_required('assign.add_assign', raise_exception=True)
@@ -251,7 +260,8 @@ def add_teaching_assignment(request):
         form = TeachingAssignmentForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Teaching assignment has been added successfully!'))
+            messages.success(request, _(
+                'Teaching assignment has been added successfully!'))
             return redirect('teaching_assignments')
         else:
             for field, errors in form.errors.items():
@@ -259,13 +269,14 @@ def add_teaching_assignment(request):
                     messages.error(request, error)
     else:
         form = TeachingAssignmentForm()
-    
+
     context = {
         'form': form,
         'admin_user': request.user,
         'title': _('Add Teaching Assignment')
     }
     return render(request, 'admins/teaching_assignment_form.html', context)
+
 
 @login_required
 @permission_required('assign.change_assign', raise_exception=True)
@@ -278,12 +289,13 @@ def edit_teaching_assignment(request, assignment_id):
     except Assign.DoesNotExist:
         messages.error(request, _('The teaching assignment does not exist!'))
         return redirect('teaching_assignments')
-    
+
     if request.method == 'POST':
         form = TeachingAssignmentForm(request.POST, instance=assignment)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Teaching assignment has been updated successfully!'))
+            messages.success(request, _(
+                'Teaching assignment has been updated successfully!'))
             return redirect('teaching_assignments')
         else:
             for field, errors in form.errors.items():
@@ -291,7 +303,7 @@ def edit_teaching_assignment(request, assignment_id):
                     messages.error(request, error)
     else:
         form = TeachingAssignmentForm(instance=assignment)
-    
+
     context = {
         'form': form,
         'assignment': assignment,
@@ -310,10 +322,11 @@ def delete_teaching_assignment(request, assignment_id):
     try:
         assignment = Assign.objects.get(id=assignment_id)
         assignment.delete()
-        messages.success(request, _('Teaching assignment has been deleted successfully!'))
+        messages.success(request, _(
+            'Teaching assignment has been deleted successfully!'))
     except Assign.DoesNotExist:
         messages.error(request, _('The teaching assignment does not exist!'))
-    
+
     return redirect('teaching_assignments')
 
 @login_required
@@ -332,9 +345,11 @@ def timetable(request):
         day = filter_form.cleaned_data.get('day')
 
         if class_id:
-            timetable_entries = timetable_entries.filter(assign__class_id=class_id)
+            timetable_entries = timetable_entries.filter(
+                assign__class_id=class_id)
         if teacher:
-            timetable_entries = timetable_entries.filter(assign__teacher=teacher)
+            timetable_entries = timetable_entries.filter(
+                assign__teacher=teacher)
         if day:
             timetable_entries = timetable_entries.filter(day=day)
 
@@ -356,7 +371,8 @@ def add_timetable_entry(request):
         form = TimetableForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Timetable entry has been added successfully!'))
+            messages.success(request, _(
+                'Timetable entry has been added successfully!'))
             return redirect('timetable')
         else:
             for field, errors in form.errors.items():
@@ -389,7 +405,8 @@ def edit_timetable_entry(request, entry_id):
         form = TimetableForm(request.POST, instance=entry)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Timetable entry has been updated successfully!'))
+            messages.success(request, _(
+                'Timetable entry has been updated successfully!'))
             return redirect('timetable')
         else:
             for field, errors in form.errors.items():
@@ -416,8 +433,312 @@ def delete_timetable_entry(request, entry_id):
     try:
         entry = AssignTime.objects.get(id=entry_id)
         entry.delete()
-        messages.success(request, _('Timetable entry has been deleted successfully!'))
+        messages.success(request, _(
+            'Timetable entry has been deleted successfully!'))
     except AssignTime.DoesNotExist:
         messages.error(request, _('The timetable entry does not exist!'))
 
     return redirect('timetable')
+
+@login_required
+def class_list(request):
+    """
+    View for listing all classes with pagination and filtering
+    """
+    # Handle filter form (optional, you can add a filter form later if needed)
+    classes = Class.objects.all().order_by('id')
+
+    # Pagination
+    paginator = Paginator(classes, PAGE_SIZE)  # Use PAGE_SIZE from constants
+    page_number = request.GET.get('page')
+    classes_page = paginator.get_page(page_number)
+
+    context = {
+        'classes': classes_page,
+        'admin_user': request.user,
+        'title': _('Manage Classes'),
+    }
+    return render(request, 'admins/class_list.html', context)
+
+
+@login_required
+@permission_required('admins.add_class', raise_exception=True)
+def add_class(request):
+    if request.method == 'POST':
+        form = ClassForm(request.POST)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, _(
+                    'Class has been added successfully!'))
+                return redirect('class_list')
+            except Exception as e:
+                messages.error(request, _(
+                    'Error creating class: {}').format(str(e)))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = ClassForm()
+
+    context = {
+        'form': form,
+        'admin_user': request.user,
+        'title': _('Add Class'),
+        'submit_text': _('Add Class'),
+        'students': [],  # Không có học sinh khi thêm mới lớp
+    }
+    return render(request, 'admins/class_form.html', context)
+
+
+@login_required
+@permission_required('admins.change_class', raise_exception=True)
+def edit_class(request, class_id):
+    try:
+        class_obj = Class.objects.get(id=class_id)
+    except Class.DoesNotExist:
+        messages.error(request, _('The class does not exist!'))
+        return redirect('class_list')
+
+    # Lấy danh sách học sinh thuộc lớp và sắp xếp theo tên
+    students = Student.objects.filter(class_id=class_obj).order_by('name')
+
+    # Phân trang
+    paginator = Paginator(students, PAGE_SIZE)
+    page_number = request.GET.get('page')
+    students_page = paginator.get_page(page_number)
+
+    if request.method == 'POST':
+        form = ClassForm(request.POST, instance=class_obj)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, _(
+                    'Class has been updated successfully!'))
+                return redirect('class_list')
+            except Exception as e:
+                messages.error(request, _(
+                    'Error updating class: {}').format(str(e)))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = ClassForm(instance=class_obj)
+
+    context = {
+        'form': form,
+        'class_obj': class_obj,
+        'admin_user': request.user,
+        'title': _('Edit Class'),
+        'submit_text': _('Update Class'),
+        'students': students_page,
+    }
+    return render(request, 'admins/class_form.html', context)
+
+
+@login_required
+@permission_required('admins.delete_class', raise_exception=True)
+def delete_class(request, class_id):
+    """
+    View để xóa lớp (chỉ xóa nếu không có học sinh nào )
+    """
+    try:
+        class_obj = Class.objects.get(id=class_id)
+        students_count = class_obj.student_set.count()
+
+        if students_count > ZERO:
+            messages.warning(request, _(
+                'Cannot delete this class because it has %(count)d student(s).') % {'count': students_count})
+        else:
+            class_obj.delete()
+            messages.success(request, _('Class has been deleted successfully!'))
+
+    except Class.DoesNotExist:
+        messages.error(request, _('The class does not exist!'))
+
+    return redirect('class_list')
+
+
+@login_required
+@permission_required('students.add_student', raise_exception=True)
+def add_student_to_class(request, class_id):
+    """
+    View để thêm học sinh vào lớp
+    """
+    try:
+        class_obj = Class.objects.get(id=class_id)
+    except Class.DoesNotExist:
+        messages.error(request, _('The class does not exist!'))
+        return redirect('class_list')
+
+    if request.method == 'POST':
+        form = AddStudentForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Tạo tài khoản người dùng
+                    user = User.objects.create_user(
+                        username=form.cleaned_data['username'],
+                        email=form.cleaned_data['email'],
+                        password=form.cleaned_data['password'],
+                        first_name=form.cleaned_data['name'].split()[0],
+                        last_name=' '.join(form.cleaned_data['name'].split()[1:]) if len(
+                            form.cleaned_data['name'].split()) > 1 else ''
+                    )
+
+                    # Tạo hồ sơ học sinh
+                    student = Student.objects.create(
+                        user=user,
+                        USN=form.cleaned_data['USN'],
+                        name=form.cleaned_data['name'],
+                        sex=form.cleaned_data['sex'],
+                        DOB=form.cleaned_data['DOB'],
+                        address=form.cleaned_data['address'],
+                        phone=form.cleaned_data['phone'],
+                        class_id=class_obj  # Gán lớp cụ thể
+                    )
+
+                    messages.success(request, _(
+                        'Student "{}" has been successfully added to class.').format(student.name))
+                    return redirect('edit_class', class_id=class_id)
+            except Exception as e:
+                messages.error(request, _(
+                    'Error creating student: {}').format(str(e)))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = AddStudentForm(initial={'class_id': class_obj})
+
+    context = {
+        'form': form,
+        'class_obj': class_obj,
+        'admin_user': request.user,
+        'title': _('Add Student to {}').format(class_obj),
+        'submit_text': _('Add Student'),
+    }
+    return render(request, 'admins/add_student_to_class.html', context)
+
+
+@login_required
+@permission_required('students.change_student', raise_exception=True)
+def edit_student(request, student_id):
+    """
+    View để sửa thông tin học sinh sử dụng EditStudentForm riêng
+    """
+    try:
+        student = Student.objects.get(USN=student_id)
+    except Student.DoesNotExist:
+        messages.error(request, _('The student does not exist!'))
+        return redirect('class_list')
+
+    if request.method == 'POST':
+        # Sử dụng EditStudentForm thay vì AddStudentForm
+        form = EditStudentForm(request.POST, instance=student)
+
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Cập nhật User model
+                    user = student.user
+
+                    # Cập nhật username nếu khác
+                    new_username = form.cleaned_data.get('username')
+                    if new_username and new_username != user.username:
+                        user.username = new_username
+
+                    # Cập nhật email nếu khác
+                    new_email = form.cleaned_data.get('email')
+                    if new_email and new_email != user.email:
+                        user.email = new_email
+
+                    # Cập nhật password nếu được cung cấp
+                    new_password = form.cleaned_data.get('password')
+                    if new_password and new_password.strip():
+                        user.set_password(new_password)
+
+                    # Cập nhật first_name và last_name từ name
+                    new_name = form.cleaned_data.get('name')
+                    if new_name:
+                        name_parts = new_name.split()
+                        user.first_name = name_parts[0] if name_parts else ''
+                        user.last_name = ' '.join(name_parts[1:]) if len(
+                            name_parts) > 1 else ''
+
+                    user.save()
+
+                    # Cập nhật Student model (form.save() sẽ tự động update vì có instance)
+                    form.save()
+
+                    messages.success(request, _(
+                        'Student "{}" has been updated successfully!').format(student.name))
+                    return redirect('edit_class', class_id=student.class_id.id)
+
+            except Exception as e:
+                messages.error(request, _(
+                    'Error updating student: {}').format(str(e)))
+        else:
+            # Hiển thị lỗi validation
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        # GET request - hiển thị form với dữ liệu hiện tại
+        form = EditStudentForm(instance=student)
+
+    context = {
+        'form': form,
+        'student': student,
+        'admin_user': request.user,
+        'title': _('Edit Student {}').format(student.name),
+        'submit_text': _('Update Student'),
+    }
+    return render(request, 'admins/edit_student.html', context)
+
+@login_required
+@permission_required('students.delete_student', raise_exception=True)
+def delete_student(request, student_id):
+    """
+    View để xóa học sinh.
+    - Nếu học sinh đã tham gia học (có StudentSubject, Attendance, hoặc Marks): Deactivate
+    - Nếu chưa có dữ liệu liên quan: Xóa hoàn toàn
+    """
+    try:
+        student = Student.objects.get(USN=student_id)
+        class_id = student.class_id.id
+
+        # Kiểm tra xem có dữ liệu học tập liên quan không
+        has_student_subjects = StudentSubject.objects.filter(student=student).exists()
+        has_attendance = Attendance.objects.filter(student=student).exists()
+        has_attendance_total = AttendanceTotal.objects.filter(student=student).exists()
+        has_marks = Marks.objects.filter(student_subject__student=student).exists()
+
+        has_related_data = any([
+            has_student_subjects,
+            has_attendance,
+            has_attendance_total,
+            has_marks
+        ])
+
+        if has_related_data:
+            # Chỉ deactivate student
+            student.user.is_active = False
+            student.user.save()
+            student.is_active = False 
+            student.save()
+            messages.warning(request, _(
+                'Student has academic records and has been deactivated instead of deleted.'))
+        else:
+            # Nếu chưa tham gia học thì cho phép xóa hoàn toàn
+            student.user.delete()
+            student.delete()
+            messages.success(request, _('Student has been deleted successfully!'))
+
+    except Student.DoesNotExist:
+        messages.error(request, _('The student does not exist!'))
+
+    return redirect('edit_class', class_id=class_id)
+
