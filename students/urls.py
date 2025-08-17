@@ -15,6 +15,7 @@ urlpatterns = [
     
     # Student attendance
     path('<str:student_usn>/attendance/', views.student_attendance, name='attendance'),
+    path('<str:student_usn>/attendance/<str:subject_id>/', views.student_attendance_detail, name='attendance_detail'),
     
     # Student marks
     path('<str:student_usn>/marks/', views.student_marks_list, name='marks_list'),
