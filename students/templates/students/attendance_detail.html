@@ -1,0 +1,233 @@
+{% extends 'students/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load dict_extras %}
+
+{% block title %}
+  {% trans "Attendance Details" %} - {{ subject.name }} - CollegeERP
+{% endblock %}
+
+{% block css %}
+<style>
+  /* Custom CSS for Print */
+  @media print {
+    .btn,
+    .breadcrumb,
+    .alert {
+      display: none !important;
+    }
+    .card {
+      border: 1px solid #dee2e6 !important;
+      box-shadow: none !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'students:student_dashboard' %}">{% trans "Dashboard" %}</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'students:attendance' student.USN %}">{% trans "Attendance" %}</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+        {{ subject.name }}
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Subject Header Card -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">
+        <i class="fas fa-book"></i>
+        {% blocktrans with subject_name=subject.name %}
+          Attendance Details for {{ subject_name }}
+        {% endblocktrans %}
+      </h4>
+      <small>
+        {{ subject.id }} | {{ student.name }} |
+        {% trans "Class" %}: {{ student_class }} |
+        {% trans "Teacher" %}: {{ teacher.name }}
+      </small>
+    </div>
+
+    <!-- Statistics Summary -->
+    <div class="card-body">
+      <div class="row text-center">
+        <div class="col-md-3">
+          <div class="card border-primary">
+            <div class="card-body">
+              <h5 class="card-title text-primary">{{ total_classes }}</h5>
+              <p class="card-text">{% trans "Total Classes" %}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-success">
+            <div class="card-body">
+              <h5 class="card-title text-success">{{ attended_classes }}</h5>
+              <p class="card-text">{% trans "Attended" %}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-danger">
+            <div class="card-body">
+              <h5 class="card-title text-danger">{{ absent_classes }}</h5>
+              <p class="card-text">{% trans "Absent" %}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card {% if is_attendance_low %}border-danger{% else %}border-success{% endif %}">
+            <div class="card-body">
+              <h5 class="card-title {% if is_attendance_low %}text-danger{% else %}text-success{% endif %}">
+                {{ attendance_percentage }}%
+              </h5>
+              <p class="card-text">{% trans "Attendance Rate" %}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Status Alert -->
+      {% if is_attendance_low %}
+        <div class="alert alert-danger mt-3" role="alert">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>{% trans "Warning!" %}</strong>
+          {% blocktrans with classes_needed=classes_to_attend %}
+            Your attendance is below 75%. You need to attend {{ classes_needed }} more classes to reach the minimum requirement.
+          {% endblocktrans %}
+        </div>
+      {% else %}
+        <div class="alert alert-success mt-3" role="alert">
+          <i class="fas fa-check-circle"></i>
+          <strong>{% trans "Good!" %}</strong>
+          {% trans "Your attendance meets the minimum requirement of 75%." %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Monthly Attendance Details -->
+  {% if monthly_attendance %}
+    {% for month, records in monthly_attendance.items %}
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-alt"></i>
+            {% blocktrans with month_name=month %}{{ month_name }}{% endblocktrans %}
+            <span class="badge bg-secondary">
+              {{ records|length }} {% trans "classes" %}
+            </span>
+          </h5>
+        </div>
+
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th width="15%">{% trans "Date" %}</th>
+                  <th width="15%">{% trans "Day" %}</th>
+                  <th width="20%">{% trans "Status" %}</th>
+                  <th width="25%">{% trans "Class Session" %}</th>
+                  <th width="25%">{% trans "Teacher" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for record in records %}
+                  <tr>
+                    <td>{{ record.date|date:"d M Y" }}</td>
+                    <td>{{ record.date|date:"l" }}</td>
+                    <td>
+                      {% if record.status %}
+                        <span class="badge bg-success">
+                          <i class="fas fa-check"></i> {% trans "Present" %}
+                        </span>
+                      {% else %}
+                        <span class="badge bg-danger">
+                          <i class="fas fa-times"></i> {% trans "Absent" %}
+                        </span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if record.attendanceclass %}
+                        <small class="text-muted">
+                          {% trans "Session" %} #{{ record.attendanceclass.id }}
+                        </small>
+                      {% else %}
+                        <small class="text-muted">{% trans "N/A" %}</small>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if record.attendanceclass.assign.teacher %}
+                        <small>{{ record.attendanceclass.assign.teacher.name }}</small>
+                      {% else %}
+                        <small class="text-muted">{% trans "N/A" %}</small>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Month Summary -->
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <small class="text-muted">
+                {% trans "Month Summary:" %}
+                <span class="text-success">
+                  {{ records|count_present }} {% trans "Present" %}
+                </span>,
+                <span class="text-danger">
+                  {{ records|count_absent }} {% trans "Absent" %}
+                </span>
+              </small>
+            </div>
+            <div class="col-md-6 text-end">
+              {% with present_count=records|count_present total_count=records|length %}
+                {% with month_percentage=present_count|calculate_percentage:total_count %}
+                  <small class="text-muted">
+                    {% trans "Month Rate:" %}
+                    <span class="{% if month_percentage < 75 %}text-danger{% else %}text-success{% endif %}">
+                      {{ month_percentage }}%
+                    </span>
+                  </small>
+                {% endwith %}
+              {% endwith %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+        <h5>{% trans "No Attendance Records" %}</h5>
+        <p class="text-muted">
+          {% trans "No attendance records found for this subject yet." %}
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Action Buttons -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <a href="{% url 'students:attendance' student.USN %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> {% trans "Back to Attendance Summary" %}
+      </a>
+    </div>
+  </div>
+{% endblock %}
