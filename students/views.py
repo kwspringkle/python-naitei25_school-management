@@ -1,20 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
-from students.models import Student, StudentSubject, Attendance
-from admins.models import Class, Subject
-from teachers.models import AssignTime, Assign
+
+from students.models import Student, Attendance
+from teachers.models import Assign
 from utils.constant import (
-    # Timetable constants
     DAYS_OF_WEEK, TIME_SLOTS, BREAK_PERIOD, LUNCH_PERIOD,
     TIMETABLE_TIME_SLOTS,
-    TIMETABLE_DAYS_COUNT, TIMETABLE_PERIODS_COUNT, TIMETABLE_DEFAULT_VALUE,
-    TIMETABLE_SKIP_PERIODS
+    ATTENDANCE_MIN_PERCENTAGE, ATTENDANCE_CALCULATION_BASE
 )
 from datetime import datetime, timedelta, date
+import math
 
 
 def _check_student_access(request):
@@ -92,65 +89,179 @@ def index(request):
 @login_required
 def student_attendance(request, student_usn):
     """
-    View student attendance for all subjects
+    View student attendance for all subjects in their class (class-based attendance)
     """
     # Get student and check access permissions
     student, redirect_response = _get_student_by_usn(request, student_usn)
     if redirect_response:
         return redirect_response
     
-    # Get all subjects for this student
-    student_subjects = StudentSubject.objects.filter(student=student)
+    # Get student's class
+    student_class = student.class_id
+    
+    # Get all subjects assigned to this class through Assign model
+    from teachers.models import Assign
+    class_assignments = Assign.objects.filter(class_id=student_class).select_related('subject', 'teacher')
     
     attendance_data = []
-    for student_subject in student_subjects:
+    for assignment in class_assignments:
+        subject = assignment.subject
+        
+        # Get attendance records for this student and subject
         attendance_records = Attendance.objects.filter(
             student=student,
-            subject=student_subject.subject
+            subject=subject
         ).order_by('-date')
         
         total_classes = attendance_records.count()
         attended_classes = attendance_records.filter(status=True).count()
         attendance_percentage = round((attended_classes / total_classes * 100), 2) if total_classes > 0 else 0
         
+        # Calculate classes to attend for 75% attendance
+        classes_to_attend = 0
+        if total_classes > 0:
+            from utils.constant import ATTENDANCE_MIN_PERCENTAGE, ATTENDANCE_CALCULATION_BASE
+            import math
+            classes_to_attend = math.ceil((ATTENDANCE_MIN_PERCENTAGE * total_classes - attended_classes) / ATTENDANCE_CALCULATION_BASE)
+            if classes_to_attend < 0:
+                classes_to_attend = 0
+        
         attendance_data.append({
-            'subject': student_subject.subject,
+            'subject': subject,
+            'teacher': assignment.teacher,
+            'assignment': assignment,
             'total_classes': total_classes,
             'attended_classes': attended_classes,
             'attendance_percentage': attendance_percentage,
+            'classes_to_attend': classes_to_attend,
             'records': attendance_records
         })
     
     context = {
         'student': student,
+        'student_class': student_class,
         'attendance_data': attendance_data,
     }
     
     return render(request, 'students/attendance.html', context)
 
 
-@login_required
-def student_marks_list(request, student_usn):
+@login_required 
+def student_attendance_detail(request, student_usn, subject_id):
     """
-    View student marks for all subjects
+    View detailed attendance for a specific subject in student's class
     """
     # Get student and check access permissions
     student, redirect_response = _get_student_by_usn(request, student_usn)
     if redirect_response:
         return redirect_response
     
-    # Get all subjects for this student with marks
-    student_subjects = StudentSubject.objects.filter(student=student)
+    # Get the subject
+    from admins.models import Subject
+    subject = get_object_or_404(Subject, id=subject_id)
+    
+    # Check if this subject is assigned to student's class
+    from teachers.models import Assign
+    try:
+        assignment = Assign.objects.get(class_id=student.class_id, subject=subject)
+    except Assign.DoesNotExist:
+        messages.error(request, _('This subject is not assigned to your class.'))
+        return redirect('students:attendance', student_usn=student_usn)
+    
+    # Get attendance records for this subject
+    attendance_records = Attendance.objects.filter(
+        student=student,
+        subject=subject
+    ).select_related('attendanceclass').order_by('-date')
+    
+    # Calculate statistics
+    total_classes = attendance_records.count()
+    attended_classes = attendance_records.filter(status=True).count()
+    absent_classes = total_classes - attended_classes
+    attendance_percentage = round((attended_classes / total_classes * 100), 2) if total_classes > 0 else 0
+    
+    # Calculate classes to attend for 75% attendance
+    from utils.constant import ATTENDANCE_MIN_PERCENTAGE, ATTENDANCE_CALCULATION_BASE
+    import math
+    classes_to_attend = 0
+    if total_classes > 0:
+        classes_to_attend = math.ceil((ATTENDANCE_MIN_PERCENTAGE * total_classes - attended_classes) / ATTENDANCE_CALCULATION_BASE)
+        if classes_to_attend < 0:
+            classes_to_attend = 0
+    
+    # Group attendance by month for better visualization
+    from collections import defaultdict
+    monthly_attendance = defaultdict(list)
+    for record in attendance_records:
+        month_key = record.date.strftime('%Y-%m')
+        monthly_attendance[month_key].append(record)
+    
+    # Sort months in descending order
+    monthly_attendance = dict(sorted(monthly_attendance.items(), reverse=True))
+    
+    context = {
+        'student': student,
+        'subject': subject,
+        'assignment': assignment,
+        'teacher': assignment.teacher,
+        'student_class': student.class_id,
+        'attendance_records': attendance_records,
+        'monthly_attendance': monthly_attendance,
+        'total_classes': total_classes,
+        'attended_classes': attended_classes,
+        'absent_classes': absent_classes,
+        'attendance_percentage': attendance_percentage,
+        'classes_to_attend': classes_to_attend,
+        'is_attendance_low': attendance_percentage < 75,
+    }
+    
+    return render(request, 'students/attendance_detail.html', context)
+
+
+@login_required
+def student_marks_list(request, student_usn):
+    """
+    View student marks for all subjects in their class
+    """
+    # Get student and check access permissions
+    student, redirect_response = _get_student_by_usn(request, student_usn)
+    if redirect_response:
+        return redirect_response
+    
+    # Get student's class
+    student_class = student.class_id
+    
+    # Get all subjects assigned to this class
+    class_assignments = Assign.objects.filter(
+        class_id=student_class
+    ).select_related('subject', 'teacher')
     
     marks_data = []
-    for student_subject in student_subjects:
-        marks = student_subject.marks_set.all().order_by('name')
-        cie_score = student_subject.get_cie()
-        attendance_percentage = student_subject.get_attendance()
+    for assignment in class_assignments:
+        # Get marks for this student and subject
+        from teachers.models import Marks
+        marks = Marks.objects.filter(
+            student_subject__student=student,
+            student_subject__subject=assignment.subject
+        ).order_by('name')
+        
+        # Get attendance percentage
+        attendance_records = Attendance.objects.filter(
+            student=student,
+            subject=assignment.subject
+        )
+        total_classes = attendance_records.count()
+        attended_classes = attendance_records.filter(status=True).count()
+        attendance_percentage = round((attended_classes / total_classes * 100), 2) if total_classes > 0 else 0
+        
+        # Calculate CIE
+        from utils.constant import CIE_CALCULATION_LIMIT, CIE_DIVISOR
+        marks_list = [mark.marks1 for mark in marks]
+        cie_score = math.ceil(sum(marks_list[:CIE_CALCULATION_LIMIT]) / CIE_DIVISOR) if marks_list else 0
         
         marks_data.append({
-            'subject': student_subject.subject,
-            'student_subject': student_subject,
+            'subject': assignment.subject,
+            'teacher': assignment.teacher,
             'marks': marks,
             'cie_score': cie_score,
             'attendance_percentage': attendance_percentage,
@@ -158,6 +269,7 @@ def student_marks_list(request, student_usn):
     
     context = {
         'student': student,
+        'student_class': student_class,
         'marks_data': marks_data,
     }
     
@@ -169,49 +281,41 @@ def student_timetable(request, class_id):
     """
     View timetable for student's class (weekly view)
     """
-    # Check if user is a student
-    is_student, redirect_response = _check_student_access(request)
-    if not is_student:
-        return redirect_response
-    
-    # Get student profile
+    # Get student and check access permissions
     student = request.user.student
-    
-    # Check if the class belongs to the student
     if student.class_id.id != class_id:
         messages.error(request, _('Access denied. You can only view your own class timetable.'))
         return redirect('students:student_dashboard')
     
-    class_obj = get_object_or_404(Class, id=class_id)
+    # Import models needed for timetable
+    from admins.models import Class
+    from teachers.models import AssignTime
     
-    # Get all assignments for this class
+    # Get class and its assignments
+    class_obj = get_object_or_404(Class, id=class_id)
     assignments = Assign.objects.filter(class_id=class_obj)
     
-    # Parse week_start (YYYY-MM-DD). Default to current date's Monday
+    # Get week dates
     week_start_str = request.GET.get('week_start')
     try:
         base_date = datetime.strptime(week_start_str, "%Y-%m-%d").date() if week_start_str else date.today()
     except ValueError:
         base_date = date.today()
-
-    # Compute Monday as start of the week
+    
+    # Get Monday and create day-to-date mapping
     monday_start = base_date - timedelta(days=base_date.weekday())
-
-    # Create display week days (Monday to Saturday) with dates
     days = [day[0] for day in DAYS_OF_WEEK]
-    day_to_date = {}
-    for idx, day_name in enumerate(days):
-        day_date = monday_start + timedelta(days=idx)
-        day_to_date[day_name] = day_date.strftime('%Y-%m-%d')
-
-    # Previous/Next week navigation
+    day_to_date = {
+        day_name: (monday_start + timedelta(days=idx)).strftime('%Y-%m-%d')
+        for idx, day_name in enumerate(days)
+    }
+    
+    # Navigation dates
     prev_week_start = (monday_start - timedelta(days=7)).strftime('%Y-%m-%d')
     next_week_start = (monday_start + timedelta(days=7)).strftime('%Y-%m-%d')
-
-    # Create timetable matrix using constants
-    time_slots = [slot[0] for slot in TIME_SLOTS]  # Get time slot names from constants
     
-    # Add break and lunch periods using constants
+    # Create time slots with breaks
+    time_slots = [slot[0] for slot in TIME_SLOTS]
     time_slots_with_breaks = []
     for slot in time_slots:
         time_slots_with_breaks.append(slot)
@@ -220,19 +324,11 @@ def student_timetable(request, class_id):
         elif slot == '12:40 - 1:30':
             time_slots_with_breaks.append(LUNCH_PERIOD)
     
-    time_slots = time_slots_with_breaks
+    # Initialize and fill timetable
+    timetable = {day: {slot: None for slot in time_slots_with_breaks} for day in days}
     
-    # Initialize timetable matrix
-    timetable = {}
-    for day in days:
-        timetable[day] = {}
-        for slot in time_slots:
-            timetable[day][slot] = None
-    
-    # Fill timetable with assignments
     for assignment in assignments:
-        assign_times = AssignTime.objects.filter(assign=assignment)
-        for assign_time in assign_times:
+        for assign_time in AssignTime.objects.filter(assign=assignment):
             if assign_time.day in timetable and assign_time.period in timetable[assign_time.day]:
                 timetable[assign_time.day][assign_time.period] = {
                     'subject': assignment.subject,
@@ -246,7 +342,7 @@ def student_timetable(request, class_id):
         'timetable': timetable,
         'days': days,
         'day_to_date': day_to_date,
-        'time_slots': time_slots,
+        'time_slots': time_slots_with_breaks,
         'week_start': monday_start.strftime('%Y-%m-%d'),
         'prev_week_start': prev_week_start,
         'next_week_start': next_week_start,
