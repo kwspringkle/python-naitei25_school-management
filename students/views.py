@@ -146,6 +146,79 @@ def student_attendance(request, student_usn):
     return render(request, 'students/attendance.html', context)
 
 
+@login_required
+def student_attendance_detail(request, student_usn, subject_id):
+    """
+    View detailed attendance for a specific subject in student's class
+    """
+    # Get student and check access permissions
+    student, redirect_response = _get_student_by_usn(request, student_usn)
+    if redirect_response:
+        return redirect_response
+    
+    # Get student's class
+    student_class = student.class_id
+    
+    # Get the subject and its assignment
+    from admins.models import Subject
+    subject = get_object_or_404(Subject, id=subject_id)
+    
+    # Check if this subject is assigned to student's class
+    try:
+        assignment = Assign.objects.get(
+            class_id=student_class,
+            subject=subject
+        ).select_related('teacher')
+    except Assign.DoesNotExist:
+        messages.error(request, _('This subject is not assigned to your class.'))
+        return redirect('students:attendance', student_usn=student_usn)
+    
+    # Get attendance records for this subject
+    attendance_records = Attendance.objects.filter(
+        student=student,
+        subject=subject
+    ).select_related('attendanceclass').order_by('-date')
+    
+    # Calculate statistics
+    total_classes = attendance_records.count()
+    attended_classes = attendance_records.filter(status=True).count()
+    absent_classes = total_classes - attended_classes
+    attendance_percentage = round((attended_classes / total_classes * 100), 2) if total_classes > 0 else 0
+    
+    # Calculate classes to attend for 75% attendance
+    classes_to_attend = 0
+    if total_classes > 0:
+        classes_to_attend = math.ceil((ATTENDANCE_MIN_PERCENTAGE * total_classes - attended_classes) / ATTENDANCE_CALCULATION_BASE)
+        if classes_to_attend < 0:
+            classes_to_attend = 0
+    
+    # Group attendance by month for better visualization
+    from collections import defaultdict
+    monthly_attendance = defaultdict(list)
+    for record in attendance_records:
+        month_key = record.date.strftime('%Y-%m')
+        monthly_attendance[month_key].append(record)
+    
+    # Sort months in descending order
+    monthly_attendance = dict(sorted(monthly_attendance.items(), reverse=True))
+    
+    context = {
+        'student': student,
+        'student_class': student_class,
+        'subject': subject,
+        'teacher': assignment.teacher,
+        'attendance_records': attendance_records,
+        'monthly_attendance': monthly_attendance,
+        'total_classes': total_classes,
+        'attended_classes': attended_classes,
+        'absent_classes': absent_classes,
+        'attendance_percentage': attendance_percentage,
+        'classes_to_attend': classes_to_attend,
+        'is_attendance_low': attendance_percentage < 75,
+    }
+    
+    return render(request, 'students/attendance_detail.html', context)
+
 @login_required 
 def student_attendance_detail(request, student_usn, subject_id):
     """
