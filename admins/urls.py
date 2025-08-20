@@ -47,4 +47,7 @@ urlpatterns = [
     #Thêm subject vào class
     path('classes/<str:class_id>/add-subject/', views.add_subject_to_class, name='add_subject_to_class'),
     path('classes/<str:class_id>/remove-subject/<int:assign_id>/', views.remove_subject_from_class, name='remove_subject_from_class'),
+    
+    #Report admin
+    path('reports/', views.admin_reports, name='admin_reports'),
 ]
