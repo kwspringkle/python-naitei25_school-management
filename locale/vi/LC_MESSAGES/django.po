@@ -575,3 +575,79 @@ msgstr ""
 
 #~ msgid "Please login to access the admin area."
 #~ msgstr "Vui lòng đăng nhập để truy cập khu vực quản trị."
+
+#: .\teachers\templates\t_edit_att.html:235
+msgid "You have unsaved changes. Are you sure you want to leave?"
+msgstr "Bạn có những thay đổi chưa được lưu. Bạn có chắc chắn muốn rời khỏi trang này?"
+
+#: .\teachers\templates\t_edit_att.html:357
+msgid "You have unsaved changes. Are you sure you want to leave this page?"
+msgstr "Bạn có những thay đổi chưa được lưu. Bạn có chắc chắn muốn rời khỏi trang này?"
+
+#: .\teachers\templates\t_edit_att.html:255
+msgid "Reminder"
+msgstr "Nhắc nhở"
+
+#: .\teachers\templates\t_edit_att.html:255
+msgid "Don't forget to save your attendance changes!"
+msgstr "Đừng quên lưu các thay đổi điểm danh!"
+
+#: .\teachers\templates\t_edit_att.html:286
+msgid "Urgent"
+msgstr "Khẩn cấp"
+
+#: .\teachers\templates\t_edit_att.html:286
+msgid "You have been editing for a while. Please save your changes now!"
+msgstr "Bạn đã chỉnh sửa trong một thời gian. Vui lòng lưu thay đổi ngay!"
+
+#: .\teachers\templates\t_edit_att.html:462
+msgid "Saving"
+msgstr "Đang lưu"
+
+#: .\teachers\templates\t_edit_att.html:462
+msgid "Your attendance data is being saved."
+msgstr "Dữ liệu điểm danh của bạn đang được lưu."
+
+#: .\teachers\templates\t_edit_att.html:515
+msgid "Unsaved Changes Detected!"
+msgstr "Phát hiện thay đổi chưa lưu!"
+
+#: .\teachers\templates\t_edit_att.html:516
+msgid "You have unsaved attendance changes. If you go back now, all your changes will be lost."
+msgstr "Bạn có những thay đổi điểm danh chưa lưu. Nếu quay lại bây giờ, tất cả thay đổi sẽ bị mất."
+
+#: .\teachers\templates\t_edit_att.html:519
+msgid "Save & Go Back"
+msgstr "Lưu & Quay lại"
+
+#: .\teachers\templates\t_edit_att.html:522
+msgid "Discard Changes"
+msgstr "Bỏ thay đổi"
+
+#: .\teachers\templates\t_edit_att.html:525
+msgid "Continue Editing"
+msgstr "Tiếp tục chỉnh sửa"
+
+#: .\teachers\templates\t_edit_att.html:583
+msgid "Saving attendance..."
+msgstr "Đang lưu điểm danh..."
+
+#: .\teachers\templates\t_edit_att.html:583
+msgid "Please wait while we save your changes."
+msgstr "Vui lòng đợi trong khi chúng tôi lưu thay đổi của bạn."
+
+#: .\teachers\templates\t_view_att.html:52
+msgid "Filter attendance"
+msgstr "Lọc điểm danh"
+
+#: .\teachers\templates\t_view_att.html:54
+msgid "All"
+msgstr "Tất cả"
+
+#: .\teachers\templates\t_view_att.html:57
+msgid "Present"
+msgstr "Có mặt"
+
+#: .\teachers\templates\t_view_att.html:60
+msgid "Absent"
+msgstr "Vắng mặt"

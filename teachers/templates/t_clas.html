@@ -11,6 +11,7 @@
           <tr>
             <th>{% trans "Class" %}</th>
             <th>{% trans "Course" %}</th>
+            <th>{% trans "Semester" %}</th>
             <th></th>
           </tr>
         </thead>
@@ -19,11 +20,10 @@
           <tr>
             <td>{{ ass.class_id }}</td>
             <td>{{ ass.subject }}</td>
+            <td><span class="badge badge-primary">{% trans "Semester" %} {{ ass.class_id.sem }}</span></td>
             <td>
               {% if choice == 1 %}
               <a class="btn btn-primary" href="{% url 't_class_date' ass.id %}" role="button">{% trans "Enter Attendance" %}</a>
-              <a class="btn btn-warning" href="#">{% trans "Extra Class" %}</a>
-              <a class="btn btn-danger" href="#">{% trans "View Students" %}</a>
               {% elif choice == 2 %}
               <a class="btn btn-primary" href="{% url 't_marks_list' ass.id %}" role="button">
                 {% trans "Enter Marks" %}
