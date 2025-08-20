@@ -2,10 +2,33 @@
 {% load i18n %}
 
 {% block content %}
+<!-- Thông tin chi tiết về lớp học -->
+<div class="card mb-3">
+    <div class="card-header bg-info text-white">
+        <i class="fas fa-info-circle"></i>
+        <b>{% trans "Class Information" %}</b>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{% trans "Class ID" %}:</strong> {{ class_info.class_id }}</p>
+                <p><strong>{% trans "Department" %}:</strong> {{ class_info.department }}</p>
+                <p><strong>{% trans "Section" %}:</strong> {{ class_info.section }}</p>
+                <p><strong>{% trans "Semester" %}:</strong> {{ class_info.semester }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{% trans "Subject" %}:</strong> {{ class_info.subject }} ({{ class_info.subject_code }})</p>
+                <p><strong>{% trans "Teacher" %}:</strong> {{ class_info.teacher }}</p>
+                <p><strong>{% trans "Total Students" %}:</strong> {{ class_info.total_students }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card mb-3">
     <div class="card-header">
-        <i class="fas fa-table"></i>
-        <b>{% blocktrans %}Attendance for {{ assign.subject }} - {{ assign.class_id }}{% endblocktrans %}</b>
+        <i class="fas fa-calendar-alt"></i>
+        <b>{% trans "Attendance Management" %}</b>
     </div>
     <div class="card-body">
         <form method="post">
@@ -20,12 +43,14 @@
             </div>
         </form>
         
+        
         <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                 <thead>
                     <tr>
                         <th>{% trans "Date" %}</th>
                         <th>{% trans "Status" %}</th>
+                        <th>{% trans "Attendance Summary" %}</th>
                         <th>{% trans "Action" %}</th>
                     </tr>
                 </thead>
@@ -35,6 +60,9 @@
                         <td>{{ a.date }}</td>
                         {% if a.status == 0 %}
                             <td class="p-3 mb-2 bg-danger text-white">{% trans "Not Marked" %}</td>
+                            <td>
+                                <small class="text-muted">{% trans "No data yet" %}</small>
+                            </td>
                             <td>
                                 <form method="post" style="display:inline;">
                                     {% csrf_token %}
@@ -48,11 +76,22 @@
                         {% elif a.status == 1 %}
                             <td class="p-3 mb-2 bg-success text-white">{% trans "Marked" %}</td>
                             <td>
+                                <div class="d-flex flex-wrap">
+                                    <span class="badge badge-primary mr-1 mb-1">{% trans "Total" %}: {{ a.total_students }}</span>
+                                    <span class="badge badge-success mr-1 mb-1">{% trans "Present" %}: {{ a.present_students }}</span>
+                                    <span class="badge badge-danger mr-1 mb-1">{% trans "Absent" %}: {{ a.absent_students }}</span>
+                                    <span class="badge badge-info mr-1 mb-1">{{ a.attendance_percentage }}%</span>
+                                </div>
+                            </td>
+                            <td>
                                 <a class="btn btn-warning" href="{% url 'edit_att' a.id %}" role="button">{% trans "Edit Attendance" %}</a>
                                 <a class="btn btn-info" href="{% url 'view_att' a.id %}" role="button">{% trans "View Attendance" %}</a>
                             </td>
                         {% else %}
                             <td class="p-3 mb-2 bg-warning text-white">{% trans "Cancelled" %}</td>
+                            <td>
+                                <small class="text-muted">{% trans "Cancelled" %}</small>
+                            </td>
                             <td>
                                 <form method="post" style="display:inline;">
                                     {% csrf_token %}
@@ -67,7 +106,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3">{% trans "No attendance records found" %}</td>
+                        <td colspan="4">{% trans "No attendance records found" %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -126,4 +165,69 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const tableRows = document.querySelectorAll('#dataTable tbody tr');
+    const showAllBtn = document.getElementById('show-all');
+    const showMarkedBtn = document.getElementById('show-marked');
+    const showUnmarkedBtn = document.getElementById('show-unmarked');
+    
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        tableRows.forEach(function(row) {
+            const dateCell = row.querySelector('td:first-child');
+            if (dateCell) {
+                const dateText = dateCell.textContent.toLowerCase();
+                
+                if (dateText.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    });
+    
+    // Filter functionality
+    showAllBtn.addEventListener('click', function() {
+        tableRows.forEach(row => row.style.display = '');
+        updateActiveButton(this);
+        searchInput.dispatchEvent(new Event('input')); // Re-apply search filter
+    });
+    
+    showMarkedBtn.addEventListener('click', function() {
+        tableRows.forEach(function(row) {
+            const statusCell = row.querySelector('td:nth-child(2)');
+            const isMarked = statusCell && statusCell.textContent.trim().includes('Marked');
+            row.style.display = isMarked ? '' : 'none';
+        });
+        updateActiveButton(this);
+        searchInput.dispatchEvent(new Event('input')); // Re-apply search filter
+    });
+    
+    showUnmarkedBtn.addEventListener('click', function() {
+        tableRows.forEach(function(row) {
+            const statusCell = row.querySelector('td:nth-child(2)');
+            const isNotMarked = statusCell && (
+                statusCell.textContent.trim().includes('Not Marked') || 
+                statusCell.textContent.trim().includes('Cancelled')
+            );
+            row.style.display = isNotMarked ? '' : 'none';
+        });
+        updateActiveButton(this);
+        searchInput.dispatchEvent(new Event('input')); // Re-apply search filter
+    });
+    
+    function updateActiveButton(activeBtn) {
+        document.querySelectorAll('.btn-group .btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        activeBtn.classList.add('active');
+    }
+});
+</script>
 {% endblock %}

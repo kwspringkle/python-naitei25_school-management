@@ -22,6 +22,35 @@ from utils.constant import (
 )
 
 
+def _calculate_attendance_statistics(attendance_queryset):
+    """
+    Private function to calculate attendance statistics from an attendance queryset.
+    
+    Args:
+        attendance_queryset: QuerySet of Attendance objects
+        
+    Returns:
+        dict: Dictionary containing attendance statistics with keys:
+            - total_students: Total number of students
+            - present_students: Number of present students
+            - absent_students: Number of absent students  
+            - attendance_percentage: Attendance percentage (rounded to 1 decimal)
+    """
+    total_students = attendance_queryset.count()
+    present_students = attendance_queryset.filter(status=True).count()
+    absent_students = total_students - present_students
+    attendance_percentage = round(
+        (present_students / total_students * 100), 1
+    ) if total_students > 0 else 0
+    
+    return {
+        'total_students': total_students,
+        'present_students': present_students,
+        'absent_students': absent_students,
+        'attendance_percentage': attendance_percentage,
+    }
+
+
 @login_required
 def teacher_dashboard(request):
     """
@@ -309,6 +338,21 @@ def t_class_date(request, assign_id):
     class_obj = assign.class_id
     has_students = class_obj.student_set.exists()
     students = class_obj.student_set.all() if has_students else []
+    
+    # Thêm thống kê điểm danh cho mỗi buổi học
+    att_list_with_stats = []
+    for att_class in att_list:
+        attendance_records = Attendance.objects.filter(
+            attendanceclass=att_class, 
+            subject=assign.subject
+        )
+        stats = _calculate_attendance_statistics(attendance_records)
+        
+        att_class.total_students = stats['total_students']
+        att_class.present_students = stats['present_students']
+        att_class.absent_students = stats['absent_students']
+        att_class.attendance_percentage = stats['attendance_percentage']
+        att_list_with_stats.append(att_class)
 
     if request.method == 'POST' and 'create_attendance' in request.POST:
         date_str = request.POST.get('attendance_date')
@@ -357,14 +401,27 @@ def t_class_date(request, assign_id):
         assc_id = request.POST.get('assc_id')
         selected_assc = get_object_or_404(AttendanceClass, id=assc_id)
 
+    # Thêm thông tin chi tiết về lớp học
+    class_info = {
+        'class_id': class_obj.id,
+        'department': class_obj.dept.name,
+        'section': class_obj.section,
+        'semester': class_obj.sem,
+        'total_students': len(students),
+        'subject': assign.subject.name,
+        'subject_code': assign.subject.id,
+        'teacher': assign.teacher.name,
+    }
+
     context = {
         'assign': assign,
-        'att_list': att_list,
+        'att_list': att_list_with_stats,
         'today': now.date(),
         'selected_assc': selected_assc,
         'c': class_obj,
         'has_students': has_students,
         'students': students,
+        'class_info': class_info,
     }
     return render(request, 't_class_date.html', context)
 
@@ -376,11 +433,29 @@ def t_attendance(request, ass_c_id):
     assc = get_object_or_404(AttendanceClass, id=ass_c_id)
     assign = assc.assign
     class_obj = assign.class_id
+    students = class_obj.student_set.all()
+    total_students_in_class = students.count()
+    
+    # Thêm thông tin chi tiết về lớp học
+    class_info = {
+        'class_id': class_obj.id,
+        'department': class_obj.dept.name,
+        'section': class_obj.section,
+        'semester': class_obj.sem,
+        'total_students': total_students_in_class,
+        'subject': assign.subject.name,
+        'subject_code': assign.subject.id,
+        'teacher': assign.teacher.name,
+        'date': assc.date,
+    }
 
     context = {
         'ass': assign,
         'c': class_obj,
         'assc': assc,
+        'students': students,
+        'total_students_in_class': total_students_in_class,
+        'class_info': class_info,
     }
     return render(request, 't_attendance.html', context)
 
@@ -426,9 +501,19 @@ def edit_att(request, ass_c_id):
     assign = assc.assign
     subject = assign.subject
     att_list = Attendance.objects.filter(attendanceclass=assc, subject=subject)
+    class_obj = assign.class_id
+    
+    # Thêm thông tin chi tiết về lớp học và thống kê
+    stats = _calculate_attendance_statistics(att_list)
+    
     context = {
         'assc': assc,
         'att_list': att_list,
+        'assign': assign,
+        'class_obj': class_obj,
+        'total_students': stats['total_students'],
+        'present_students': stats['present_students'],
+        'absent_students': stats['absent_students'],
     }
     return render(request, 't_edit_att.html', context)
 
@@ -441,10 +526,32 @@ def view_att(request, ass_c_id):
     assign = assc.assign
     subject = assign.subject
     att_list = Attendance.objects.filter(attendanceclass=assc, subject=subject)
+    class_obj = assign.class_id
+    
+    # Tính toán thống kê điểm danh
+    stats = _calculate_attendance_statistics(att_list)
+    
+    # Thêm thông tin chi tiết về lớp học
+    class_info = {
+        'class_id': class_obj.id,
+        'department': class_obj.dept.name,
+        'section': class_obj.section,
+        'semester': class_obj.sem,
+        'subject': assign.subject.name,
+        'subject_code': assign.subject.id,
+        'teacher': assign.teacher.name,
+        'date': assc.date,
+    }
+    
     context = {
         'assc': assc,
         'att_list': att_list,
         'assign': assign,
+        'total_students': stats['total_students'],
+        'present_students': stats['present_students'],
+        'absent_students': stats['absent_students'],
+        'attendance_percentage': stats['attendance_percentage'],
+        'class_info': class_info,
     }
     return render(request, 't_view_att.html', context)
 
