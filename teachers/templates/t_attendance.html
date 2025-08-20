@@ -2,27 +2,159 @@
 {% load i18n %}
 
 {% block content %}
+<style>
+    /* Enhanced search and table styling */
+    .search-highlight {
+        background-color: #fff3cd !important;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-group-toggle .btn {
+        transition: all 0.2s ease;
+    }
+    
+    .btn-group-toggle .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    #search-input:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .attendance-counter {
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+    
+    /* Warning styles for unsaved changes */
+    .unsaved-changes-warning {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        display: none;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .changed-row {
+        background-color: #fff3cd !important;
+        border-left: 4px solid #ffc107 !important;
+    }
+    
+    .submit-button-warning {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+</style>
+<!-- Unsaved changes warning -->
+<div class="unsaved-changes-warning alert alert-warning alert-dismissible" id="unsaved-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>{% trans "Warning!" %}</strong> {% trans "You have unsaved changes. Please save your attendance before leaving this page." %}
+    <button type="button" class="close" onclick="hideUnsavedWarning()">
+        <span>&times;</span>
+    </button>
+</div>
+
 {% if students %}
+<!-- Thông tin chi tiết về lớp học -->
+<div class="card mb-3">
+    <div class="card-header bg-info text-white">
+        <i class="fas fa-info-circle"></i>
+        <b>{% trans "Class Information" %}</b>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{% trans "Class ID" %}:</strong> {{ class_info.class_id }}</p>
+                <p><strong>{% trans "Department" %}:</strong> {{ class_info.department }}</p>
+                <p><strong>{% trans "Section" %}:</strong> {{ class_info.section }}</p>
+                <p><strong>{% trans "Semester" %}:</strong> {{ class_info.semester }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{% trans "Subject" %}:</strong> {{ class_info.subject }} ({{ class_info.subject_code }})</p>
+                <p><strong>{% trans "Teacher" %}:</strong> {{ class_info.teacher }}</p>
+                <p><strong>{% trans "Date" %}:</strong> {{ class_info.date }}</p>
+                <p><strong>{% trans "Total Students" %}:</strong> {{ class_info.total_students }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <form action="{% url 'att_confirm' assc.id %}" method="post">
     {% csrf_token %}
     <div class="card mb-3">
         <div class="card-header">
-            <i class="fas fa-table"></i>
-            <b>{% trans dept1.name %}</b>
+            <i class="fas fa-check-circle"></i>
+            <b>{% trans "Mark Attendance" %}</b>
+            <div class="mt-2">
+                <span class="badge badge-primary">{% trans "Total Students in Class" %}: {{ total_students_in_class }}</span>
+                <span class="badge badge-info">{% trans "Date" %}: {{ assc.date }}</span>
+            </div>
         </div>
         <div class="card-body">
+            <!-- Search functionality -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" id="search-input" class="form-control" placeholder="{% trans 'Search by student name or ID...' %}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" id="select-all-present" class="btn btn-success mr-2">
+                        <i class="fas fa-check-circle"></i> {% trans "Mark All Present" %}
+                    </button>
+                    <button type="button" id="select-all-absent" class="btn btn-danger">
+                        <i class="fas fa-times-circle"></i> {% trans "Mark All Absent" %}
+                    </button>
+                </div>
+            </div>
+            
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
+                    <thead class="thead-dark">
                         <tr>
-                            <th>{% trans "Student name" %}</th>
-                            <th></th>
+                            <th width="10%">#</th>
+                            <th width="30%">{% trans "Student ID" %}</th>
+                            <th width="40%">{% trans "Student Name" %}</th>
+                            <th width="20%">{% trans "Status" %}</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for s in students %}
                         <tr>
-                            <td>{% trans s.name %}</td>
+                            <td>{{ forloop.counter }}</td>
+                            <td><code>{{ s.USN }}</code></td>
+                            <td><strong>{{ s.name }}</strong></td>
                             <td>
                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
                                     <label class="btn btn-outline-success active">
@@ -38,6 +170,32 @@
                     </tbody>
                 </table>
             </div>
+            <div class="card-footer">
+                <!-- Real-time attendance counter -->
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <h5>{% trans "Current Selection" %}:</h5>
+                            <span class="badge badge-success badge-lg mr-2 attendance-counter">
+                                {% trans "Present" %}: <span id="present-count">{{ total_students_in_class }}</span>
+                            </span>
+                            <span class="badge badge-danger badge-lg mr-2 attendance-counter">
+                                {% trans "Absent" %}: <span id="absent-count">0</span>
+                            </span>
+                            <span class="badge badge-primary badge-lg attendance-counter">
+                                {% trans "Total" %}: {{ total_students_in_class }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save"></i> {% trans "Submit Attendance" %}
+                </button>
+                <a href="{% url 't_class_date' ass.id %}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i> {% trans "Back to Attendance List" %}
+                </a>
+            </div>
         </div>
     </div>
     
@@ -45,4 +203,237 @@
 {% else %}
     <p>{% trans "No students in Class" %}</p>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Track unsaved changes
+    let hasUnsavedChanges = false;
+    let originalState = new Map();
+    let submitButton = document.querySelector('button[type="submit"]');
+    
+    // Store original state of all radio buttons
+    function storeOriginalState() {
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        radioButtons.forEach(function(radio) {
+            if (radio.checked) {
+                originalState.set(radio.name, radio.value);
+            }
+        });
+    }
+    
+    // Check if current state differs from original
+    function checkForChanges() {
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        let hasChanges = false;
+        let currentState = new Map();
+        
+        // Get current state
+        radioButtons.forEach(function(radio) {
+            if (radio.checked) {
+                currentState.set(radio.name, radio.value);
+            }
+        });
+        
+        // Compare with original state
+        for (let [studentId, originalValue] of originalState) {
+            if (currentState.get(studentId) !== originalValue) {
+                hasChanges = true;
+                break;
+            }
+        }
+        
+        hasUnsavedChanges = hasChanges;
+        
+        // Show/hide warning and update UI
+        if (hasUnsavedChanges) {
+            showUnsavedWarning();
+            highlightChangedRows();
+            submitButton.classList.add('submit-button-warning');
+        } else {
+            hideUnsavedWarning();
+            removeHighlightFromRows();
+            submitButton.classList.remove('submit-button-warning');
+        }
+    }
+    
+    // Show unsaved warning
+    function showUnsavedWarning() {
+        document.getElementById('unsaved-warning').style.display = 'block';
+    }
+    
+    // Hide unsaved warning
+    window.hideUnsavedWarning = function() {
+        document.getElementById('unsaved-warning').style.display = 'none';
+    }
+    
+    // Highlight rows that have been changed
+    function highlightChangedRows() {
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        radioButtons.forEach(function(radio) {
+            if (radio.checked) {
+                const originalValue = originalState.get(radio.name);
+                const row = radio.closest('tr');
+                if (originalValue && originalValue !== radio.value) {
+                    row.classList.add('changed-row');
+                } else {
+                    row.classList.remove('changed-row');
+                }
+            }
+        });
+    }
+    
+    // Remove highlight from all rows
+    function removeHighlightFromRows() {
+        const rows = document.querySelectorAll('tr.changed-row');
+        rows.forEach(row => row.classList.remove('changed-row'));
+    }
+    
+    // Before unload warning
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            const message = 'You have unsaved changes. Are you sure you want to leave?';
+            e.returnValue = message;
+            return message;
+        }
+    });
+    
+    // Function to update attendance counters
+    function updateCounters() {
+        const visibleRows = document.querySelectorAll('#dataTable tbody tr:not([style*="display: none"])');
+        let presentCount = 0;
+        let absentCount = 0;
+        
+        visibleRows.forEach(function(row) {
+            const presentRadio = row.querySelector('input[value="present"]');
+            const absentRadio = row.querySelector('input[value="absent"]');
+            
+            if (presentRadio && presentRadio.checked) {
+                presentCount++;
+            } else if (absentRadio && absentRadio.checked) {
+                absentCount++;
+            }
+        });
+        
+        document.getElementById('present-count').textContent = presentCount;
+        document.getElementById('absent-count').textContent = absentCount;
+    }
+    
+    // Search functionality
+    const searchInput = document.getElementById('search-input');
+    const tableRows = document.querySelectorAll('#dataTable tbody tr');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        tableRows.forEach(function(row) {
+            const studentId = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const studentName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            
+            if (studentId.includes(searchTerm) || studentName.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateCounters();
+    });
+    
+    // Mark All Present functionality
+    document.getElementById('select-all-present').addEventListener('click', function() {
+        const visibleRows = document.querySelectorAll('#dataTable tbody tr:not([style*="display: none"])');
+        visibleRows.forEach(function(row) {
+            const presentRadio = row.querySelector('input[value="present"]');
+            const presentLabel = row.querySelector('label:has(input[value="present"])');
+            const absentLabel = row.querySelector('label:has(input[value="absent"])');
+            
+            if (presentRadio) {
+                presentRadio.checked = true;
+                if (presentLabel) {
+                    presentLabel.classList.add('active');
+                }
+                if (absentLabel) {
+                    absentLabel.classList.remove('active');
+                }
+            }
+        });
+        updateCounters();
+    });
+    
+    // Mark All Absent functionality
+    document.getElementById('select-all-absent').addEventListener('click', function() {
+        const visibleRows = document.querySelectorAll('#dataTable tbody tr:not([style*="display: none"])');
+        visibleRows.forEach(function(row) {
+            const absentRadio = row.querySelector('input[value="absent"]');
+            const presentLabel = row.querySelector('label:has(input[value="present"])');
+            const absentLabel = row.querySelector('label:has(input[value="absent"])');
+            
+            if (absentRadio) {
+                absentRadio.checked = true;
+                if (absentLabel) {
+                    absentLabel.classList.add('active');
+                }
+                if (presentLabel) {
+                    presentLabel.classList.remove('active');
+                }
+            }
+        });
+        updateCounters();
+    });
+    
+    // Add event listeners to all radio buttons
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            updateCounters();
+            checkForChanges();
+        });
+    });
+    
+    // Mark changes when using Mark All buttons
+    const originalMarkAllPresent = document.getElementById('select-all-present').onclick;
+    document.getElementById('select-all-present').addEventListener('click', function() {
+        setTimeout(checkForChanges, 100); // Small delay to ensure state is updated
+    });
+    
+    const originalMarkAllAbsent = document.getElementById('select-all-absent').onclick;
+    document.getElementById('select-all-absent').addEventListener('click', function() {
+        setTimeout(checkForChanges, 100); // Small delay to ensure state is updated
+    });
+    
+    // Clear warning when form is submitted
+    document.querySelector('form').addEventListener('submit', function() {
+        hasUnsavedChanges = false;
+        hideUnsavedWarning();
+    });
+    
+    // Store initial state and run initial updates
+    storeOriginalState();
+    updateCounters();
+    
+    // Test function - can be called from browser console to test warning
+    window.testWarning = function() {
+        console.log('Testing warning system...');
+        hasUnsavedChanges = true;
+        showUnsavedWarning();
+        submitButton.classList.add('submit-button-warning');
+        console.log('Warning should be visible now');
+    };
+    
+    // Test function to check current state
+    window.debugState = function() {
+        console.log('=== DEBUG STATE ===');
+        console.log('Original state:', originalState);
+        const currentState = new Map();
+        document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            if (radio.checked) {
+                currentState.set(radio.name, radio.value);
+            }
+        });
+        console.log('Current state:', currentState);
+        console.log('Has unsaved changes:', hasUnsavedChanges);
+        console.log('Warning visible:', document.getElementById('unsaved-warning').style.display !== 'none');
+    };
+});
+</script>
 {% endblock %}

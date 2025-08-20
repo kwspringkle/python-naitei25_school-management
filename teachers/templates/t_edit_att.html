@@ -1,28 +1,87 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/t_edit_att.css' %}">{# CSS specific for edit attendance page #}
+
+<!-- Unsaved changes warning -->
+<div class="unsaved-changes-warning alert alert-warning alert-dismissible" id="unsaved-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>{% trans "Warning!" %}</strong> {% trans "You have unsaved changes. Please save your attendance before leaving this page." %}
+    <button type="button" class="close" onclick="hideUnsavedWarning()">
+        <span>&times;</span>
+    </button>
+</div>
+
+<!-- Thông tin chi tiết về buổi học -->
+<div class="card mb-3">
+    <div class="card-header bg-warning text-dark">
+        <i class="fas fa-edit"></i>
+        <b>{% trans "Edit Attendance" %}</b>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{% trans "Class" %}:</strong> {{ assc.assign.class_id }}</p>
+                <p><strong>{% trans "Subject" %}:</strong> {{ assc.assign.subject.name }} ({{ assc.assign.subject.id }})</p>
+                <p><strong>{% trans "Teacher" %}:</strong> {{ assc.assign.teacher.name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{% trans "Date" %}:</strong> {{ assc.date }}</p>
+                <p><strong>{% trans "Total Students" %}:</strong> {{ att_list|length }}</p>
+                <p><strong>{% trans "Status" %}:</strong> 
+                    <span class="badge badge-warning">{% trans "Editing" %}</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <form action="{% url 'att_confirm' assc.id %}" method="post">
     {% csrf_token %}
     <div class="card mb-3">
         <div class="card-header">
-            <i class="fas fa-table"></i>
-            <b>{% blocktrans %}{{ dept1.name }}{% endblocktrans %}</b>
+            <i class="fas fa-users-cog"></i>
+            <b>{% trans "Edit Student Attendance" %}</b>
         </div>
         <div class="card-body">
+            <!-- Search functionality -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" id="search-input" class="form-control" placeholder="{% trans 'Search by student name or ID...' %}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" id="select-all-present" class="btn btn-success mr-2">
+                        <i class="fas fa-check-circle"></i> {% trans "Mark All Present" %}
+                    </button>
+                    <button type="button" id="select-all-absent" class="btn btn-danger">
+                        <i class="fas fa-times-circle"></i> {% trans "Mark All Absent" %}
+                    </button>
+                </div>
+            </div>
+            
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
+                    <thead class="thead-dark">
                         <tr>
-                            <th>{% trans "Student name" %}</th>
-                            <th>{% trans "Status" %}</th>
+                            <th width="10%">#</th>
+                            <th width="30%">{% trans "Student ID" %}</th>
+                            <th width="40%">{% trans "Student Name" %}</th>
+                            <th width="20%">{% trans "Status" %}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for att in att_list %}
                         <tr>
-                            <td>{{ att.student.name }}</td>
+                            <td>{{ forloop.counter }}</td>
+                            <td><code>{{ att.student.USN }}</code></td>
+                            <td><strong>{{ att.student.name }}</strong></td>
                             <td>
                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
                                     {% if att.status %}
@@ -47,10 +106,585 @@
                     </tbody>
                 </table>
             </div>
+            <div class="card-footer">
+                <!-- Real-time attendance counter -->
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <h5>{% trans "Current Selection" %}:</h5>
+                            <span class="badge badge-success badge-lg mr-2 attendance-counter">
+                                {% trans "Present" %}: <span id="present-count">0</span>
+                            </span>
+                            <span class="badge badge-danger badge-lg mr-2 attendance-counter">
+                                {% trans "Absent" %}: <span id="absent-count">0</span>
+                            </span>
+                            <span class="badge badge-primary badge-lg attendance-counter">
+                                {% trans "Total" %}: {{ att_list|length }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save"></i> {% trans "Update Attendance" %}
+                </button>
+                <a href="{% url 't_class_date' assc.assign.id %}" class="btn btn-secondary btn-lg" id="back-to-list-btn">
+                    <i class="fas fa-arrow-left"></i> {% trans "Back to Attendance List" %}
+                </a>
+            </div>
         </div>
     </div>
 
-    <input class="btn btn-success" type="submit" value="{% trans 'Submit' %}">
 </form>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Track unsaved changes
+    let hasUnsavedChanges = false;
+    let originalState = new Map();
+    let submitButton = document.querySelector('button[type="submit"]');
+    
+    // Store original state from database (based on checked radio buttons on page load)
+    function storeOriginalState() {
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        radioButtons.forEach(function(radio) {
+            if (radio.checked) {
+                originalState.set(radio.name, radio.value);
+            }
+        });
+        console.log('Original state stored:', originalState);
+    }
+    
+    // Check if current state differs from original
+    function checkForChanges() {
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        let hasChanges = false;
+        let currentState = new Map();
+        
+        // Get current state
+        radioButtons.forEach(function(radio) {
+            if (radio.checked) {
+                currentState.set(radio.name, radio.value);
+            }
+        });
+        
+        console.log('Current state:', currentState);
+        console.log('Original state:', originalState);
+        
+        // Compare with original state
+        for (let [studentId, originalValue] of originalState) {
+            const currentValue = currentState.get(studentId);
+            if (currentValue !== originalValue) {
+                console.log(`Change detected for ${studentId}: ${originalValue} -> ${currentValue}`);
+                hasChanges = true;
+                break;
+            }
+        }
+        
+        hasUnsavedChanges = hasChanges;
+        console.log('Has unsaved changes:', hasUnsavedChanges);
+        
+        // Show/hide warning and update UI
+        if (hasUnsavedChanges) {
+            showUnsavedWarning();
+            highlightChangedRows();
+            submitButton.classList.add('submit-button-warning');
+            startPeriodicReminder();
+        } else {
+            hideUnsavedWarning();
+            removeHighlightFromRows();
+            submitButton.classList.remove('submit-button-warning');
+            stopPeriodicReminder();
+        }
+    }
+    
+    // Show unsaved warning
+    function showUnsavedWarning() {
+        document.getElementById('unsaved-warning').style.display = 'block';
+    }
+    
+    // Hide unsaved warning
+    window.hideUnsavedWarning = function() {
+        document.getElementById('unsaved-warning').style.display = 'none';
+    }
+    
+    // Periodic reminder variables
+    let reminderInterval = null;
+    let reminderCount = 0;
+    
+    // Start periodic reminder
+    function startPeriodicReminder() {
+        if (reminderInterval) return; // Already running
+        
+        reminderInterval = setInterval(function() {
+            if (hasUnsavedChanges) {
+                reminderCount++;
+                showSaveReminder();
+                
+                // Show more urgent reminder after 3 minutes
+                if (reminderCount >= 3) {
+                    showUrgentSaveReminder();
+                }
+            }
+        }, 60000); // Every 1 minute
+    }
+    
+    // Stop periodic reminder
+    function stopPeriodicReminder() {
+        if (reminderInterval) {
+            clearInterval(reminderInterval);
+            reminderInterval = null;
+            reminderCount = 0;
+        }
+    }
+    
+    // Show save reminder toast
+    function showSaveReminder() {
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-warning save-reminder-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1060;
+            max-width: 350px;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        toast.innerHTML = `
+            <i class="fas fa-save"></i>
+            <strong>{% trans "Reminder" %}:</strong> {% trans "Don't forget to save your attendance changes!" %}
+            <button type="button" class="close ml-2" onclick="this.parentElement.remove()">
+                <span>&times;</span>
+            </button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 5000);
+    }
+    
+    // Show urgent save reminder
+    function showUrgentSaveReminder() {
+        const urgentToast = document.createElement('div');
+        urgentToast.className = 'alert alert-danger save-reminder-toast urgent-reminder';
+        urgentToast.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1060;
+            max-width: 350px;
+            animation: shake 0.5s ease-in-out, slideInRight 0.3s ease-out;
+            border: 2px solid #dc3545;
+        `;
+        urgentToast.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>{% trans "Urgent" %}:</strong> {% trans "You have been editing for a while. Please save your changes now!" %}
+            <button type="button" class="close ml-2" onclick="this.parentElement.remove()">
+                <span>&times;</span>
+            </button>
+        `;
+        
+        document.body.appendChild(urgentToast);
+        
+        // Auto remove after 8 seconds
+        setTimeout(() => {
+            if (urgentToast.parentElement) {
+                urgentToast.remove();
+            }
+        }, 8000);
+    }
+    
+    // Highlight rows that have been changed
+    function highlightChangedRows() {
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        radioButtons.forEach(function(radio) {
+            if (radio.checked) {
+                const originalValue = originalState.get(radio.name);
+                const row = radio.closest('tr');
+                if (originalValue && originalValue !== radio.value) {
+                    row.classList.add('changed-row');
+                    console.log(`Highlighting row for ${radio.name}: ${originalValue} -> ${radio.value}`);
+                } else {
+                    row.classList.remove('changed-row');
+                }
+            }
+        });
+    }
+    
+    // Remove highlight from all rows
+    function removeHighlightFromRows() {
+        const rows = document.querySelectorAll('tr.changed-row');
+        rows.forEach(row => row.classList.remove('changed-row'));
+    }
+    
+    // Before unload warning
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            const message = '{% trans "You have unsaved changes. Are you sure you want to leave?" %}';
+            e.preventDefault();
+            e.returnValue = message;
+            return message;
+        }
+    });
+    
+    // Function to update attendance counters
+    function updateCounters() {
+        const visibleRows = document.querySelectorAll('#dataTable tbody tr:not([style*="display: none"])');
+        let presentCount = 0;
+        let absentCount = 0;
+        
+        visibleRows.forEach(function(row) {
+            const presentRadio = row.querySelector('input[value="present"]');
+            const absentRadio = row.querySelector('input[value="absent"]');
+            
+            if (presentRadio && presentRadio.checked) {
+                presentCount++;
+            } else if (absentRadio && absentRadio.checked) {
+                absentCount++;
+            }
+        });
+        
+        document.getElementById('present-count').textContent = presentCount;
+        document.getElementById('absent-count').textContent = absentCount;
+    }
+    
+    // Search functionality
+    const searchInput = document.getElementById('search-input');
+    const tableRows = document.querySelectorAll('#dataTable tbody tr');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        tableRows.forEach(function(row) {
+            const studentId = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const studentName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            
+            if (studentId.includes(searchTerm) || studentName.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateCounters();
+    });
+    
+    // Mark All Present functionality
+    document.getElementById('select-all-present').addEventListener('click', function() {
+        const visibleRows = document.querySelectorAll('#dataTable tbody tr:not([style*="display: none"])');
+        visibleRows.forEach(function(row) {
+            const presentRadio = row.querySelector('input[value="present"]');
+            const presentLabel = row.querySelector('label:has(input[value="present"])');
+            const absentLabel = row.querySelector('label:has(input[value="absent"])');
+            
+            if (presentRadio) {
+                presentRadio.checked = true;
+                if (presentLabel) {
+                    presentLabel.classList.add('active');
+                }
+                if (absentLabel) {
+                    absentLabel.classList.remove('active');
+                }
+            }
+        });
+        updateCounters();
+        setTimeout(checkForChanges, 100); // Check for changes after state update
+    });
+    
+    // Mark All Absent functionality
+    document.getElementById('select-all-absent').addEventListener('click', function() {
+        const visibleRows = document.querySelectorAll('#dataTable tbody tr:not([style*="display: none"])');
+        visibleRows.forEach(function(row) {
+            const absentRadio = row.querySelector('input[value="absent"]');
+            const presentLabel = row.querySelector('label:has(input[value="present"])');
+            const absentLabel = row.querySelector('label:has(input[value="absent"])');
+            
+            if (absentRadio) {
+                absentRadio.checked = true;
+                if (absentLabel) {
+                    absentLabel.classList.add('active');
+                }
+                if (presentLabel) {
+                    presentLabel.classList.remove('active');
+                }
+            }
+        });
+        updateCounters();
+        setTimeout(checkForChanges, 100); // Check for changes after state update
+    });
+    
+    // Add event listeners to all radio buttons
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    console.log('Found radio buttons:', radioButtons.length);
+    radioButtons.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            console.log('Radio button changed:', radio.name, radio.value);
+            updateCounters();
+            checkForChanges();
+        });
+    });
+    
+
+    
+    // Clear warning when form is submitted
+    document.querySelector('form').addEventListener('submit', function() {
+        hasUnsavedChanges = false;
+        hideUnsavedWarning();
+        stopPeriodicReminder();
+        
+        // Remove any existing toast notifications
+        const toasts = document.querySelectorAll('.save-reminder-toast');
+        toasts.forEach(toast => toast.remove());
+        
+        // Show success message
+        showSaveSuccessMessage();
+    });
+    
+    // Show save success message
+    function showSaveSuccessMessage() {
+        const successToast = document.createElement('div');
+        successToast.className = 'alert alert-success save-reminder-toast';
+        successToast.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1060;
+            max-width: 350px;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        successToast.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <strong>{% trans "Saving" %}...</strong> {% trans "Your attendance data is being saved." %}
+        `;
+        
+        document.body.appendChild(successToast);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (successToast.parentElement) {
+                successToast.remove();
+            }
+        }, 3000);
+    }
+    
+    // Handle Back to Attendance List button specifically
+    document.getElementById('back-to-list-btn').addEventListener('click', function(e) {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            showBackButtonWarning(this.href);
+        }
+    });
+    
+    // Show specific warning for back button
+    function showBackButtonWarning(targetUrl) {
+        const warningModal = document.createElement('div');
+        warningModal.className = 'modal-backdrop';
+        warningModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1060;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        const warningDialog = document.createElement('div');
+        warningDialog.className = 'modal-dialog modal-dialog-centered';
+        warningDialog.style.cssText = `
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 500px;
+            margin: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: fadeInScale 0.3s ease-out;
+        `;
+        
+        warningDialog.innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <h4 class="mb-3">{% trans "Unsaved Changes Detected!" %}</h4>
+                <p class="mb-4">{% trans "You have unsaved attendance changes. If you go back now, all your changes will be lost." %}</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-success btn-lg px-4" onclick="saveBeforeLeaving('${targetUrl}')">
+                        <i class="fas fa-save"></i> {% trans "Save & Go Back" %}
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg px-4" onclick="leaveWithoutSaving('${targetUrl}')">
+                        <i class="fas fa-times"></i> {% trans "Discard Changes" %}
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg px-4" onclick="closeWarningModal()">
+                        <i class="fas fa-edit"></i> {% trans "Continue Editing" %}
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        warningModal.appendChild(warningDialog);
+        document.body.appendChild(warningModal);
+        
+        // Add click outside to close
+        warningModal.addEventListener('click', function(e) {
+            if (e.target === warningModal) {
+                closeWarningModal();
+            }
+        });
+    }
+    
+    // Save before leaving
+    window.saveBeforeLeaving = function(targetUrl) {
+        closeWarningModal();
+        
+        // Show saving message
+        showSavingProgressMessage();
+        
+        // Submit the form
+        document.querySelector('form').submit();
+    };
+    
+    // Leave without saving
+    window.leaveWithoutSaving = function(targetUrl) {
+        hasUnsavedChanges = false;
+        stopPeriodicReminder();
+        closeWarningModal();
+        window.location.href = targetUrl;
+    };
+    
+    // Close warning modal
+    window.closeWarningModal = function() {
+        const modal = document.querySelector('.modal-backdrop');
+        if (modal) {
+            modal.remove();
+        }
+    };
+    
+    // Show saving progress message
+    function showSavingProgressMessage() {
+        const progressToast = document.createElement('div');
+        progressToast.className = 'alert alert-info save-reminder-toast';
+        progressToast.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1070;
+            max-width: 350px;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        progressToast.innerHTML = `
+            <i class="fas fa-spinner fa-spin"></i>
+            <strong>{% trans "Saving attendance..." %}</strong> {% trans "Please wait while we save your changes." %}
+        `;
+        
+        document.body.appendChild(progressToast);
+    }
+    
+    // Warn when clicking other navigation links with unsaved changes
+    document.addEventListener('click', function(e) {
+        const target = e.target;
+        const isNavLink = target.tagName === 'A' && target.href && 
+                         !target.href.includes('#') && 
+                         !target.classList.contains('btn-close') &&
+                         target.id !== 'back-to-list-btn' && // Exclude our back button
+                         !target.onclick;
+        
+        if (isNavLink && hasUnsavedChanges) {
+            e.preventDefault();
+            const confirmLeave = confirm('{% trans "You have unsaved changes. Are you sure you want to leave this page?" %}');
+            if (confirmLeave) {
+                hasUnsavedChanges = false;
+                window.location.href = target.href;
+            }
+        }
+    });
+    
+    // Add event listeners to all radio buttons for individual student changes
+    const allRadioButtons = document.querySelectorAll('input[type="radio"]');
+    console.log('Found radio buttons:', allRadioButtons.length);
+    
+    // Add change event to radio buttons
+    allRadioButtons.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            console.log('Radio button changed:', radio.name, radio.value);
+            updateCounters();
+            // Add small delay to ensure DOM is updated
+            setTimeout(checkForChanges, 50);
+        });
+    });
+    
+    // Also add click event to button group labels (Bootstrap specific)
+    const buttonLabels = document.querySelectorAll('.btn-group-toggle label');
+    console.log('Found button labels:', buttonLabels.length);
+    buttonLabels.forEach(function(label) {
+        label.addEventListener('click', function() {
+            console.log('Label clicked');
+            // Delay to allow Bootstrap to update the radio state
+            setTimeout(function() {
+                updateCounters();
+                checkForChanges();
+            }, 100);
+        });
+    });
+    
+    // Additional event delegation for any missed clicks
+    document.addEventListener('click', function(e) {
+        // Check if clicked element is within a btn-group-toggle
+        if (e.target.closest('.btn-group-toggle')) {
+            console.log('Button group clicked');
+            setTimeout(function() {
+                updateCounters();
+                checkForChanges();
+            }, 150);
+        }
+    });
+    
+    // Store initial state and run initial updates
+    storeOriginalState();
+    updateCounters();
+    
+    // Test function - can be called from browser console to test warning
+    window.testWarning = function() {
+        console.log('Testing warning system...');
+        hasUnsavedChanges = true;
+        showUnsavedWarning();
+        submitButton.classList.add('submit-button-warning');
+        console.log('Warning should be visible now');
+    };
+    
+    // Test function to check current state
+    window.debugState = function() {
+        console.log('=== DEBUG STATE ===');
+        console.log('Original state:', originalState);
+        const currentState = new Map();
+        document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            if (radio.checked) {
+                currentState.set(radio.name, radio.value);
+            }
+        });
+        console.log('Current state:', currentState);
+        console.log('Has unsaved changes:', hasUnsavedChanges);
+        console.log('Warning visible:', document.getElementById('unsaved-warning').style.display !== 'none');
+    };
+    
+    // Test function to manually trigger warning
+    window.testRadioChange = function() {
+        console.log('Testing radio change detection...');
+        const firstRadio = document.querySelector('input[type="radio"]');
+        if (firstRadio) {
+            console.log('Found first radio:', firstRadio.name, firstRadio.value);
+            firstRadio.click();
+            setTimeout(function() {
+                console.log('After click - hasUnsavedChanges:', hasUnsavedChanges);
+            }, 200);
+        }
+    };
+});
+</script>
 {% endblock %}

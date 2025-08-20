@@ -1,25 +1,84 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block content %}
+<!-- Thông tin chi tiết về lớp học -->
 <div class="card mb-3">
-    <div class="card-header">
-        <i class="fas fa-table"></i>
-        <b>{% blocktrans %}Attendance for {{ assign.subject }} - {{ assign.class_id }} on {{ assc.date }}{% endblocktrans %}</b>
+    <div class="card-header bg-info text-white">
+        <i class="fas fa-info-circle"></i>
+        <b>{% trans "Class Information" %}</b>
     </div>
     <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{% trans "Class ID" %}:</strong> {{ class_info.class_id }}</p>
+                <p><strong>{% trans "Department" %}:</strong> {{ class_info.department }}</p>
+                <p><strong>{% trans "Section" %}:</strong> {{ class_info.section }}</p>
+                <p><strong>{% trans "Semester" %}:</strong> {{ class_info.semester }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{% trans "Subject" %}:</strong> {{ class_info.subject }} ({{ class_info.subject_code }})</p>
+                <p><strong>{% trans "Teacher" %}:</strong> {{ class_info.teacher }}</p>
+                <p><strong>{% trans "Date" %}:</strong> {{ class_info.date }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fas fa-chart-bar"></i>
+        <b>{% trans "Attendance Summary" %}</b>
+        <div class="mt-2">
+            <span class="badge badge-primary">{% trans "Total" %}: {{ total_students }}</span>
+            <span class="badge badge-success">{% trans "Present" %}: {{ present_students }}</span>
+            <span class="badge badge-danger">{% trans "Absent" %}: {{ absent_students }}</span>
+            <span class="badge badge-info">{% trans "Attendance Rate" %}: {{ attendance_percentage }}%</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Search and Filter functionality -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    </div>
+                    <input type="text" id="search-input" class="form-control" placeholder="{% trans 'Search by student name or ID...' %}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="btn-group" role="group" aria-label="{% trans 'Filter attendance' %}">
+                    <button type="button" class="btn btn-outline-primary active" id="show-all">
+                        <i class="fas fa-users"></i> {% trans "All" %}
+                    </button>
+                    <button type="button" class="btn btn-outline-success" id="show-present">
+                        <i class="fas fa-check"></i> {% trans "Present" %}
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="show-absent">
+                        <i class="fas fa-times"></i> {% trans "Absent" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
+                <thead class="thead-dark">
                     <tr>
-                        <th>{% trans "Student name" %}</th>
-                        <th>{% trans "Status" %}</th>
+                        <th width="10%">#</th>
+                        <th width="30%">{% trans "Student ID" %}</th>
+                        <th width="40%">{% trans "Student Name" %}</th>
+                        <th width="20%">{% trans "Status" %}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for att in att_list %}
                     <tr>
-                        <td>{{ att.student.name }}</td>
+                        <td>{{ forloop.counter }}</td>
+                        <td><code>{{ att.student.USN }}</code></td>
+                        <td><strong>{{ att.student.name }}</strong></td>
                         <td>
                             {% if att.status %}
                             <span class="p-2 mb-2 bg-success text-white">{% trans "Present" %}</span>
@@ -30,7 +89,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="2">{% trans "No attendance records found" %}</td>
+                        <td colspan="4">{% trans "No attendance records found" %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -39,4 +98,7 @@
         <a class="btn btn-primary mt-3" href="{% url 't_class_date' assign.id %}" role="button">{% trans "Back to Attendance List" %}</a>
     </div>
 </div>
+
+<!-- External JavaScript -->
+<script src="{% static 'js/t_view_att.js' %}"></script>
 {% endblock %}
