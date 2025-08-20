@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from teachers.models import Teacher
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from .models import Teacher, Assign, ExamSession, Marks, AssignTime, AttendanceClass
 from students.models import Attendance, StudentSubject
@@ -18,7 +18,7 @@ from utils.constant import (
     TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE,
     FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE, FREE_TEACHERS_NO_SUBJECT_KNOWLEDGE_MESSAGE,
     TEACHER_FILTER_DISTINCT_ENABLED, TEACHER_FILTER_BY_CLASS, TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE, DATE_FORMAT,
-    ATTENDANCE_STANDARD, CIE_STANDARD
+    ATTENDANCE_STANDARD, CIE_STANDARD,TEST_NAME_CHOICES
 )
 
 
@@ -79,8 +79,41 @@ def t_clas(request, teacher_id, choice):
 @login_required
 def t_marks_list(request, assign_id):
     assignment = get_object_or_404(Assign, id=assign_id)
+    
+    # Kiểm tra xem user hiện tại có phải là giáo viên của assignment này không
+    if assignment.teacher.user != request.user:
+        messages.error(request, 'Bạn không có quyền truy cập assignment này!')
+        return redirect('teacher_dashboard')
+    
     exam_sessions_list = ExamSession.objects.filter(assign=assignment)
-    return render(request, 't_marks_list.html', {'m_list': exam_sessions_list})
+    
+    # Xử lý tạo bài kiểm tra mới
+    if request.method == 'POST' and 'create_exam' in request.POST:
+        exam_name = request.POST.get('exam_name')
+        if exam_name:
+            try:
+                new_exam, created = ExamSession.objects.get_or_create(
+                    assign=assignment,
+                    name=exam_name,
+                    defaults={'status': False}
+                )
+                if created:
+                    messages.success(request, _('Exam "%(exam_name)s" was created successfully!') % {'exam_name': exam_name})
+                else:
+                    messages.warning(request, _('Exam "%(exam_name)s" already exists!') % {'exam_name': exam_name})
+            except Exception as e:
+                messages.error(request, _('Error while creating exam: %(error)s') % {'error': str(e)})
+        else:
+            messages.error(request, _('Please enter the exam name!'))
+    
+        return redirect('t_marks_list', assign_id=assign_id)
+    
+    context = {
+        'assignment': assignment,
+        'm_list': exam_sessions_list,
+        'exam_names': TEST_NAME_CHOICES
+    }
+    return render(request, 't_marks_list.html', context)
 
 # Hiển thị form nhập điểm cho các học sinh đang học môn học này trong lớp.
 # Chỉ hiển thị học sinh đã đăng ký môn học (StudentSubject).

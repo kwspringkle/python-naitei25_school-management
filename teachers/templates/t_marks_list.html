@@ -2,10 +2,50 @@
 {% load i18n %}
 
 {% block content %}
+<!-- Create New Exam Section -->
 <div class="card mb-3">
     <div class="card-header">
+        <i class="fas fa-plus"></i>
+        <b>{% trans "Tạo bài kiểm tra mới" %}</b>
+    </div>
+    <div class="card-body">
+        <form method="post" class="row">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <label for="exam_name" class="form-label">{% trans "Loại bài kiểm tra" %}</label>
+                <select name="exam_name" id="exam_name" class="form-control" required>
+                    <option value="">-- Chọn loại bài kiểm tra --</option>
+                    {% for exam_code, exam_name in exam_names %}
+                        <option value="{{ exam_code }}">{{ exam_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button type="submit" name="create_exam" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>{% trans "Tạo bài kiểm tra" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Original Exam Sessions Table -->
+<div class="card mb-3">
+      <!-- /.container-fluid -->
+      <!-- Messages -->
+      {% if messages %}
+      <div class="mt-2">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    <div class="card-header">
         <i class="fas fa-table"></i>
-        <b>{% trans "Attendance" %}</b>
+        <b>{% trans "List of Exams" %}</b>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -34,7 +74,7 @@
                         {% endif %}
                     </tr>
                     {% empty %}
-                    <p>{% trans "student has no subjects" %}</p>
+                    <p>{% trans "No exams available" %}</p>
                     {% endfor %}
 
                 </tbody>
