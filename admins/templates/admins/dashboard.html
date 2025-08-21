@@ -16,7 +16,7 @@
         </div>
     </div>
 </div>
-            
+
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-md-6 col-lg-2_4">
@@ -46,7 +46,7 @@
             <div class="stat-label">{% trans "Subjects" %}</div>
         </div>
     </div>
-    
+
     <div class="col-md-6 col-lg-2_4">
         <div class="stat-card classes">
             <div class="stat-number text-danger">{{ total_classes }}</div>
@@ -54,7 +54,7 @@
         </div>
     </div>
 </div>
-            
+
 <!-- Quick Actions -->
 <div class="row mt-4">
     <div class="col-lg-8">
@@ -107,11 +107,19 @@
                         </a>
                     </div>
 
-                </div>    
+                </div>
+                <div class="row mt-5">
+                    <div class="col-md-3">
+                        <a href="{% url 'admin_reports' %}" class="action-btn btn-assignments">
+                            <i class="fas fa-chalkboard me-2"></i>
+                            {% trans "Report and Statistics" %}
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-lg-4">
         <div class="action-card">
             <h5 class="mb-3">
@@ -128,4 +136,100 @@
         </div>
     </div>
 </div>
+
+
+<!-- Reports & Statistics Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="action-card reports-section">
+            <h4 class="mb-3">
+                <i class="fas fa-chart-line me-2 text-primary"></i>
+                {% trans "Reports & Statistics Overview" %}
+            </h4>
+            <p class="text-muted mb-4">
+                {% trans "Monitor student performance, attendance, and overall academic data management" %}
+            </p>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="report-card">
+                        <div class="report-icon bg-primary">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h6>{% trans "Student Performance" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Track academic progress, grades, and performance trends across classes and subjects" %}
+                        </p>
+                        <a href="{% url 'admin_reports' %}?type=performance" class="btn btn-sm btn-outline-primary">
+                            {% trans "View Report" %}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="report-card">
+                        <div class="report-icon bg-success">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h6>{% trans "Attendance Reports" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Monitor student and teacher attendance patterns, identify trends and issues" %}
+                        </p>
+                        <a href="{% url 'admin_reports' %}?type=attendance" class="btn btn-sm btn-outline-success">
+                            {% trans "View Report" %}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="report-card">
+                        <div class="report-icon bg-warning">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h6>{% trans "Teaching Analytics" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Analyze teaching assignments, class distribution, and academic workload" %}
+                        </p>
+                        <a href="{% url 'admin_reports' %}?type=teaching" class="btn btn-sm btn-outline-warning">
+                            {% trans "View Report" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <div class="report-icon bg-info">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h6>{% trans "Data Management" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Comprehensive overview of all system data including students, teachers, classes,and subjects" %}
+                        </p>
+                        <a href="{% url 'admin_reports' %}?type=data" class="btn btn-sm btn-outline-info">
+                            {% trans "View Report" %}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <div class="report-icon bg-danger">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <h6>{% trans "Export & Download" %}</h6>
+                        <p class="text-muted small">
+                            {% trans "Generate and download detailed reports in various formats for analysis and record keeping" %}
+                        </p>
+                        <a href="{% url 'admin_reports' %}?type=export" class="btn btn-sm btn-outline-danger">
+                            {% trans "Export Data" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

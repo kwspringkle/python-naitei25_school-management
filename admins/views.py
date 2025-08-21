@@ -10,6 +10,10 @@ from admins.models import User
 from django.db import transaction
 from django.core.paginator import Paginator
 from django.urls import reverse
+from django.db.models import Count, Avg, Q
+from django.utils import timezone
+from datetime import datetime, timedelta
+
 # Local application imports
 from utils.constant import (
     ADMIN_DATETIME_FORMAT,
@@ -32,7 +36,7 @@ from .forms import (
     AddSubjectToClassForm)
 # Model imports
 from students.models import Student, Attendance, StudentSubject, AttendanceTotal
-from teachers.models import Teacher, Assign, AssignTime, Marks
+from teachers.models import Teacher, Assign, AssignTime, Marks, ExamSession, AttendanceClass
 from admins.models import User, Dept, Subject, Class
 
 
@@ -1022,3 +1026,199 @@ def remove_subject_from_class(request, class_id, assign_id):
         messages.error(request, _('The assignment does not exist!'))
     return redirect('edit_class', class_id=class_id)
 
+def _get_performance_report_context(total_students: int):
+    """Build context for Student Performance report."""
+    student_performance = StudentSubject.objects.select_related('student', 'subject').annotate(
+        avg_marks=Avg('marks__marks1')
+    ).filter(marks__isnull=False)
+
+    top_students = student_performance.order_by('-avg_marks')[:10]
+
+    class_performance = Class.objects.annotate(
+        student_count=Count('student'),
+        avg_performance=Avg('student__studentsubject__marks__marks1')
+    )
+
+    return {
+        'report_type': 'performance',
+        'total_students': total_students,
+        'top_students': top_students,
+        'class_performance': class_performance,
+        'title': 'Student Performance Report'
+    }
+
+
+def _get_attendance_report_context():
+    """Build context for Attendance report."""
+    today = timezone.now().date()
+    month_ago = today - timedelta(days=30)
+
+    student_attendance = Attendance.objects.filter(
+        date__gte=month_ago
+    ).values(
+        'student__class_id__id',
+        'student__class_id__section',
+        'student__class_id__sem',
+        'student__class_id__dept__name',
+    ).annotate(
+        total_records=Count('id'),
+        present_records=Count('id', filter=Q(status=True)),
+        absent_records=Count('id', filter=Q(status=False))
+    ).order_by('student__class_id__id')
+
+    teacher_attendance = AttendanceClass.objects.filter(
+        date__gte=month_ago
+    ).values('assign__teacher__name').annotate(
+        total_classes=Count('date'),
+        present_classes=Count('date', filter=Q(status=True)),
+        absent_classes=Count('date', filter=Q(status=False))
+    ).order_by('assign__teacher__name')
+
+    return {
+        'report_type': 'attendance',
+        'student_attendance': student_attendance,
+        'teacher_attendance': teacher_attendance,
+        'title': 'Attendance Report'
+    }
+
+
+def _get_teaching_report_context():
+    """Build context for Teaching Analytics report."""
+    teaching_assignments = Assign.objects.select_related('teacher', 'subject', 'class_id').annotate(
+        total_students=Count('class_id__student')
+    )
+
+    teacher_workload = Teacher.objects.annotate(
+        total_assignments=Count('assign'),
+        total_classes=Count('assign__class_id', distinct=True),
+        total_students=Count('assign__class_id__student')
+    )
+
+    subject_distribution = Subject.objects.annotate(
+        assignment_count=Count('assign'),
+        teacher_count=Count('assign__teacher', distinct=True),
+        class_count=Count('assign__class_id', distinct=True)
+    )
+
+    return {
+        'report_type': 'teaching',
+        'teaching_assignments': teaching_assignments,
+        'teacher_workload': teacher_workload,
+        'subject_distribution': subject_distribution,
+        'title': 'Teaching Analytics Report'
+    }
+
+
+def _get_data_report_context():
+    """Build context for Data Management report."""
+    department_stats = Dept.objects.annotate(
+        class_count=Count('class', distinct=True),
+        student_count=Count('class__student', distinct=True),
+        teacher_count=Count('class__assign__teacher', distinct=True)
+    )
+
+    class_stats = Class.objects.annotate(
+        student_count=Count('student', distinct=True),
+        subject_count=Count('assign__subject', distinct=True),
+        teacher_count=Count('assign__teacher', distinct=True)
+    )
+
+    subject_stats = Subject.objects.annotate(
+        assignment_count=Count('assign', distinct=True),
+        class_count=Count('assign__class_id', distinct=True),
+        student_count=Count('assign__class_id__student', distinct=True)
+    )
+
+    return {
+        'report_type': 'data',
+        'department_stats': department_stats,
+        'class_stats': class_stats,
+        'subject_stats': subject_stats,
+        'title': 'Data Management Report'
+    }
+
+
+def _get_export_report_context():
+    """Build context for Export report."""
+    return {
+        'report_type': 'export',
+        'title': 'Export Data'
+    }
+
+
+def _get_overview_report_context(total_students: int, total_teachers: int, total_classes: int,
+                                 total_departments: int, total_subjects: int):
+    """Build context for Overview report."""
+    recent_students = Student.objects.order_by('-USN')[:5]
+    recent_teachers = Teacher.objects.order_by('-id')[:5]
+    recent_classes = Class.objects.order_by('-id')[:5]
+
+    system_stats = {
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'total_classes': total_classes,
+        'total_departments': total_departments,
+        'total_subjects': total_subjects,
+        'total_assignments': Assign.objects.count(),
+        'total_exam_sessions': ExamSession.objects.count(),
+        'total_attendance_records': Attendance.objects.count()
+    }
+
+    return {
+        'report_type': 'overview',
+        'recent_students': recent_students,
+        'recent_teachers': recent_teachers,
+        'recent_classes': recent_classes,
+        'system_stats': system_stats,
+        'title': 'Reports & Statistics Overview'
+    }
+
+
+@login_required
+def admin_reports(request):
+    """Admin Reports and Statistics Dashboard"""
+    report_type = request.GET.get('type', 'overview')
+
+    # Common totals used across views and summary
+    total_students = Student.objects.count()
+    total_teachers = Teacher.objects.count()
+    total_classes = Class.objects.count()
+    total_departments = Dept.objects.count()
+    total_subjects = Subject.objects.count()
+
+    # Dispatch to the appropriate report builder
+    if report_type == 'performance':
+        context = _get_performance_report_context(total_students)
+    elif report_type == 'attendance':
+        context = _get_attendance_report_context()
+    elif report_type == 'teaching':
+        context = _get_teaching_report_context()
+    elif report_type == 'data':
+        context = _get_data_report_context()
+    elif report_type == 'export':
+        context = _get_export_report_context()
+    else:
+        context = _get_overview_report_context(
+            total_students, total_teachers, total_classes, total_departments, total_subjects
+        )
+
+    # Add common context
+    context.update({
+        'admin_user': request.user,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'total_classes': total_classes,
+        'total_departments': total_departments,
+        'total_subjects': total_subjects,
+        'current_date': timezone.now().date(),
+        'report_types': [
+            ('overview', 'Overview'),
+            ('performance', 'Student Performance'),
+            ('attendance', 'Attendance Reports'),
+            ('teaching', 'Teaching Analytics'),
+            ('data', 'Data Management'),
+            ('export', 'Export & Download')
+        ]
+    })
+
+    return render(request, 'admins/admin_reports.html', context)

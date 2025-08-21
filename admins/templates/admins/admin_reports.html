@@ -1,0 +1,400 @@
+{% extends 'admins/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ title }} - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid reports-page">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary mr-3">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {% trans "Back to Dashboard" %}
+            </a>
+            <h1 class="h3 text-gray-800">
+                <i class="fas fa-chart-bar text-primary mr-2"></i>
+                {{ title }}
+            </h1>
+        </div>
+        <div class="d-flex">
+            <span class="badge badge-primary mr-2">
+                <i class="fas fa-calendar"></i>
+                {{ current_date|date:"d/m/Y" }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <ul class="nav nav-tabs card-header-tabs" id="reportTabs" role="tablist">
+                {% for type_code, type_name in report_types %}
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link {% if report_type == type_code %}active{% endif %}" 
+                       href="{% url 'admin_reports' %}?type={{ type_code }}" 
+                       role="tab">
+                        {% if type_code == 'overview' %}
+                            <i class="fas fa-tachometer-alt mr-2"></i>
+                        {% elif type_code == 'performance' %}
+                            <i class="fas fa-user-graduate mr-2"></i>
+                        {% elif type_code == 'attendance' %}
+                            <i class="fas fa-calendar-check mr-2"></i>
+                        {% elif type_code == 'teaching' %}
+                            <i class="fas fa-chalkboard-teacher mr-2"></i>
+                        {% elif type_code == 'data' %}
+                            <i class="fas fa-database mr-2"></i>
+                        {% elif type_code == 'export' %}
+                            <i class="fas fa-download mr-2"></i>
+                        {% endif %}
+                        {{ type_name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    {% if report_type == 'overview' %}
+        <!-- Overview Dashboard -->
+        <div class="row">
+            <!-- System Statistics -->
+            <div class="col-xl-3 col-md-6 mb-4 pd-10">
+                <div class="card border-left-primary h-100">
+                    <div class="card-body pd-10">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase text-muted small mb-1">
+                                    {% trans "Total Students" %}
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-dark">{{ total_students }}</div>
+                            </div>
+                            <i class="fas fa-user-graduate fa-2x text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4 pd-10">
+                <div class="card border-left-success h-100">
+                    <div class="card-body pd-10">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase text-muted small mb-1">
+                                    {% trans "Total Teachers" %}
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-dark">{{ total_teachers }}</div>
+                            </div>
+                            <i class="fas fa-user-tie fa-2x text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4 pd-10">
+                <div class="card border-left-info h-100">
+                    <div class="card-body pd-10">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase text-muted small mb-1">
+                                    {% trans "Total Classes" %}
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-dark">{{ total_classes }}</div>
+                            </div>
+                            <i class="fas fa-chalkboard fa-2x text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4 pd-10">
+                <div class="card border-left-warning h-100">
+                    <div class="card-body pd-10">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase text-muted small mb-1">
+                                    {% trans "Total Subjects" %}
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-dark">{{ total_subjects }}</div>
+                            </div>
+                            <i class="fas fa-book fa-2x text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-dark">
+                            <i class="fas fa-user-graduate mr-2"></i>
+                            {% trans "Recent Students" %}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_students %}
+                            {% for student in recent_students %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:36px;height:36px;color:#fff;">
+                                    <span class="font-weight-bold">{{ student.name|first|upper }}</span>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="font-weight-600">{{ student.name }}</div>
+                                    <small class="text-muted">{{ student.class_id }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0">{% trans "No recent students" %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-dark">
+                            <i class="fas fa-user-tie mr-2"></i>
+                            {% trans "Recent Teachers" %}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_teachers %}
+                            {% for teacher in recent_teachers %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-success d-flex align-items-center justify-content-center" style="width:36px;height:36px;color:#fff;">
+                                    <span class="font-weight-bold">{{ teacher.name|first|upper }}</span>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="font-weight-600">{{ teacher.name }}</div>
+                                    <small class="text-muted">{{ teacher.dept }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0">{% trans "No recent teachers" %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-dark">
+                            <i class="fas fa-chalkboard mr-2"></i>
+                            {% trans "Recent Classes" %}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_classes %}
+                            {% for class in recent_classes %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-info d-flex align-items-center justify-content-center" style="width:36px;height:36px;color:#fff;">
+                                    <span class="font-weight-bold">{{ class.section|first|upper }}</span>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="font-weight-600">{{ class.name }}</div>
+                                    <small class="text-muted">{{ class.dept }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0">{% trans "No recent classes" %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif report_type == 'performance' %}
+        <!-- Student Performance Report -->
+        <div class="card mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-dark">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    {% trans "Student Performance Overview" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if top_students %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle mb-0 table-striped">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="text-center" style="width:80px;">{% trans "Rank" %}</th>
+                                    <th>{% trans "Student Name" %}</th>
+                                    <th>{% trans "Class" %}</th>
+                                    <th>{% trans "Subject" %}</th>
+                                    <th class="text-center" style="width:150px;">{% trans "Average Marks" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in top_students %}
+                                <tr>
+                                    <td class="text-center">{{ forloop.counter }}</td>
+                                    <td>{{ student.student.name }}</td>
+                                    <td>{{ student.student.class_id }}</td>
+                                    <td>{{ student.subject.name }}</td>
+                                    <td class="text-center">{{ student.avg_marks|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">{% trans "No performance data available" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+    {% elif report_type == 'attendance' %}
+        <!-- Attendance Report -->
+        <div class="card mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-dark">
+                    <i class="fas fa-calendar-check mr-2"></i>
+                    {% trans "Attendance Statistics" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-0 table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>{% trans "Class" %}</th>
+                                <th class="text-center" style="width:160px;">{% trans "Present Days" %}</th>
+                                <th class="text-center" style="width:160px;">{% trans "Absent Days" %}</th>
+                                <th class="text-center" style="width:180px;">{% trans "Attendance Rate" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attendance in student_attendance %}
+                            <tr>
+                                <td>
+                                    {{ attendance.student__class_id__dept__name }} · {% trans "Sem" %} {{ attendance.student__class_id__sem }} · {{ attendance.student__class_id__section }}
+                                </td>
+                                <td class="text-center">{{ attendance.present_records }}</td>
+                                <td class="text-center">{{ attendance.absent_records }}</td>
+                                <td class="text-center">
+                                    {% if attendance.total_records > 0 %}
+                                        {% widthratio attendance.present_records attendance.total_records 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    {% elif report_type == 'teaching' %}
+        <!-- Teaching Analytics Report -->
+        <div class="card mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-dark">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>
+                    {% trans "Teaching Assignments Overview" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if teaching_assignments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle mb-0 table-striped">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>{% trans "Teacher" %}</th>
+                                    <th>{% trans "Subject" %}</th>
+                                    <th>{% trans "Class" %}</th>
+                                    <th class="text-center" style="width:160px;">{% trans "Total Students" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in teaching_assignments %}
+                                <tr>
+                                    <td>{{ assignment.teacher.name }}</td>
+                                    <td>{{ assignment.subject.name }}</td>
+                                    <td>{{ assignment.class_id }}</td>
+                                    <td class="text-center">{{ assignment.total_students }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">{% trans "No teaching assignment data available" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+    {% elif report_type == 'data' %}
+        <!-- Data Management Report -->
+        <div class="card mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-dark">
+                    <i class="fas fa-database mr-2"></i>
+                    {% trans "System Data Overview" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-0 table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>{% trans "Department" %}</th>
+                                <th class="text-center" style="width:140px;">{% trans "Classes" %}</th>
+                                <th class="text-center" style="width:140px;">{% trans "Students" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in department_stats %}
+                            <tr>
+                                <td>{{ dept.name }}</td>
+                                <td class="text-center">{{ dept.class_count }}</td>
+                                <td class="text-center">{{ dept.student_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    {% elif report_type == 'export' %}
+        <!-- Export Data -->
+        <div class="card mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-dark">
+                    <i class="fas fa-download mr-2"></i>
+                    {% trans "Export Data" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <button class="btn btn-primary btn-block">
+                            <i class="fas fa-download mr-2"></i>
+                            {% trans "Export Students" %}
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-success btn-block">
+                            <i class="fas fa-download mr-2"></i>
+                            {% trans "Export Teachers" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
