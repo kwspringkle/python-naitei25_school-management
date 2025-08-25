@@ -1,0 +1,7 @@
+{% load i18n %}
+<th>
+    {% trans display_name %}
+    <a href="{{ url }}" class="ms-2 text-white">
+        <i class="fas fa-sort{% if is_sorted %}-{% if current_dir == 'asc' %}up{% else %}down{% endif %}{% endif %}"></i>
+    </a>
+</th>

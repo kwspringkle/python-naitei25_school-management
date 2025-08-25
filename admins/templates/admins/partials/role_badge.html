@@ -1,0 +1,11 @@
+{% load i18n %}
+{% if user.is_superuser %}
+    <span class="badge">{% trans "Admin" %}</span>
+{% elif user.is_student %}
+    <span class="badge">{% trans "Student" %}</span>
+{% elif user.is_teacher %}
+    <span class="badge">{% trans "Teacher" %}</span>
+{% else %}
+    <span class="badge">{% trans "User" %}</span>
+{% endif %}
+

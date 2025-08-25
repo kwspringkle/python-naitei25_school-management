@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.db.models import Count, Avg, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.db.models import Case, When, Value, IntegerField
 
 # Local application imports
 from utils.constant import (
@@ -33,7 +34,9 @@ from .forms import (
     EditStudentForm,
     DepartmentForm,
     SubjectForm,
-    AddSubjectToClassForm)
+    AddSubjectToClassForm,
+    AddUserForm,
+    EditUserForm)
 # Model imports
 from students.models import Student, Attendance, StudentSubject, AttendanceTotal
 from teachers.models import Teacher, Assign, AssignTime, Marks, ExamSession, AttendanceClass
@@ -1222,3 +1225,198 @@ def admin_reports(request):
     })
 
     return render(request, 'admins/admin_reports.html', context)
+
+@login_required
+@permission_required('auth.view_user', raise_exception=True)
+def user_list(request):
+    """
+    View list, search, sort accounts
+    """
+    users = User.objects.all()
+
+    # Search
+    search_query = request.GET.get('q', '').strip()
+    users = _apply_search(users, search_query)
+
+    # Filters
+    users = _apply_filters(users, request.GET)
+
+    # Sorting
+    sort = request.GET.get('sort')
+    direction = request.GET.get('dir', 'asc')
+    if sort:
+        if sort == 'username':
+            users = users.order_by('username' if direction == 'asc' else '-username')
+        elif sort == 'full_name':
+            users = users.order_by('first_name' if direction == 'asc' else '-first_name')
+        elif sort == 'email':
+            users = users.order_by('email' if direction == 'asc' else '-email')
+        elif sort == 'role':
+            users = users.annotate(
+                role_order=Case(
+                    When(is_superuser=True, then=Value(1)),
+                    When(teacher__isnull=False, then=Value(2)),
+                    When(student__isnull=False, then=Value(3)),
+                    default=Value(4),
+                    output_field=IntegerField()
+                )
+            ).order_by('role_order' if direction == 'asc' else '-role_order')
+            
+    # Pagination
+    paginator = Paginator(users, PAGE_SIZE)
+    page_number = request.GET.get('page')
+    users_page = paginator.get_page(page_number)
+
+    context = {
+        'users': users_page,
+        'admin_user': request.user,
+        'title': _('Manage Users'),
+    }
+    return render(request, 'admins/user_list.html', context)
+
+def _apply_search(queryset, search_query):
+    """
+    Apply search filter on username or email
+    """
+    if not search_query:
+        return queryset
+    return queryset.filter(
+        Q(username__icontains=search_query) |
+        Q(email__icontains=search_query)
+    )
+
+
+def _apply_filters(queryset, params):
+    """
+    Apply filters from request GET params: is_active, role
+    """
+    # Filter by is_active
+    is_active_filter = params.get('is_active')
+    if is_active_filter == 'True':
+        queryset = queryset.filter(is_active=True)
+    elif is_active_filter == 'False':
+        queryset = queryset.filter(is_active=False)
+
+    # Filter by role
+    role_filter = params.get('role')
+    if role_filter == 'admin':
+        queryset = queryset.filter(is_superuser=True)
+    elif role_filter == 'student':
+        queryset = queryset.filter(student__isnull=False)
+    elif role_filter == 'teacher':
+        queryset = queryset.filter(teacher__isnull=False)
+    elif role_filter == 'user':
+        queryset = queryset.filter(
+            is_superuser=False,
+            student__isnull=True,
+            teacher__isnull=True
+        )
+
+    return queryset
+
+@login_required
+@permission_required('auth.add_user', raise_exception=True)
+def add_user(request):
+    """
+    View add user mới
+    """
+    if request.method == 'POST':
+        form = AddUserForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    user = User.objects.create_user(
+                        username=form.cleaned_data['username'],
+                        email=form.cleaned_data['email'],
+                        password=form.cleaned_data['password'],
+                        first_name=form.cleaned_data['first_name'],
+                        last_name=form.cleaned_data['last_name'],
+                        is_superuser=form.cleaned_data['is_superuser'],
+                        is_active=form.cleaned_data['is_active']
+                    )
+                    messages.success(request, _(
+                        'User "{}" has been added successfully!').format(user.username))
+                    return redirect('user_list')
+            except Exception as e:
+                messages.error(request, _(
+                    'Error creating user: {}').format(str(e)))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = AddUserForm()
+
+    context = {
+        'form': form,
+        'admin_user': request.user,
+        'title': _('Add User'),
+        'submit_text': _('Add User'),
+    }
+    return render(request, 'admins/user_form.html', context)
+
+
+@login_required
+@permission_required('auth.change_user', raise_exception=True)
+def edit_user(request, user_id):
+    """
+    View edit account
+    """
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, _('The user does not exist!'))
+        return redirect('user_list')
+
+    if request.method == 'POST':
+        form = EditUserForm(request.POST, instance=user)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    user = form.save(commit=False)
+                    if form.cleaned_data['password']:
+                        user.set_password(form.cleaned_data['password'])
+                    user.save()
+                    messages.success(request, _(
+                        'User "{}" has been updated successfully!').format(user.username))
+                    return redirect('user_list')
+            except Exception as e:
+                messages.error(request, _(
+                    'Error updating user: {}').format(str(e)))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = EditUserForm(instance=user)
+
+    context = {
+        'form': form,
+        'user_obj': user,
+        'admin_user': request.user,
+        'title': _('Edit User {}').format(user.username),
+        'submit_text': _('Update User'),
+    }
+    return render(request, 'admins/user_form.html', context)
+
+
+@login_required
+@permission_required('auth.delete_user', raise_exception=True)
+def toggle_user_status(request, user_id):
+    """
+    View khóa, mở khóa tk
+    """
+    try:
+        user = User.objects.get(id=user_id)
+        if user == request.user:
+            messages.error(request, _(
+                'You cannot deactivate your own account!'))
+        else:
+            user.is_active = not user.is_active
+            user.save()
+            status = 'activated' if user.is_active else 'deactivated'
+            messages.success(request, _(
+                'User "{}" has been {} successfully!').format(user.username, status))
+    except User.DoesNotExist:
+        messages.error(request, _('The user does not exist!'))
+    return redirect('user_list')
