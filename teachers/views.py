@@ -11,6 +11,8 @@ from django.urls import reverse
 from .models import Teacher, Assign, ExamSession, Marks, AssignTime, AttendanceClass
 from students.models import Attendance, StudentSubject
 from django.db import transaction
+from utils.date_utils import determine_semester, determine_academic_year_start
+from datetime import datetime, timedelta, date
 
 from utils.constant import (
     DAYS_OF_WEEK, TIME_SLOTS, TIMETABLE_TIME_SLOTS,
@@ -18,7 +20,7 @@ from utils.constant import (
     TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE,
     FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE, FREE_TEACHERS_NO_SUBJECT_KNOWLEDGE_MESSAGE,
     TEACHER_FILTER_DISTINCT_ENABLED, TEACHER_FILTER_BY_CLASS, TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE, DATE_FORMAT,
-    ATTENDANCE_STANDARD, CIE_STANDARD,TEST_NAME_CHOICES
+    ATTENDANCE_STANDARD, CIE_STANDARD,TEST_NAME_CHOICES, BREAK_PERIOD, LUNCH_PERIOD
 )
 
 
@@ -239,36 +241,131 @@ def edit_marks(request, marks_c_id):
 @login_required()
 def t_timetable(request, teacher_id):
     with transaction.atomic():
-        # Check if teacher exists
         teacher = get_object_or_404(Teacher, id=teacher_id)
 
-        # Verify the teacher belongs to the authenticated user
-        if teacher.user != request.user:
+        # Allow owner teacher OR staff/superuser to view
+        if teacher.user != request.user and not (
+            getattr(request.user, 'is_staff', False) or getattr(request.user, 'is_superuser', False)
+        ):
             messages.error(request, _(TIMETABLE_ACCESS_DENIED_MESSAGE))
             return redirect('teacher_dashboard')
 
         asst = AssignTime.objects.filter(assign__teacher_id=teacher_id)
-        class_matrix = [[TIMETABLE_DEFAULT_VALUE for i in range(
-            TIMETABLE_PERIODS_COUNT)] for j in range(TIMETABLE_DAYS_COUNT)]
 
-        for i, d in enumerate(DAYS_OF_WEEK):
-            t = 0
-            for j in range(TIMETABLE_PERIODS_COUNT):
-                if j == 0:
-                    class_matrix[i][0] = d[0]
-                    continue
-                if j in TIMETABLE_SKIP_PERIODS:
-                    continue
-                try:
-                    a = asst.get(period=TIME_SLOTS[t][0], day=d[0])
-                    class_matrix[i][j] = a
-                except AssignTime.DoesNotExist:
-                    pass
-                t += 1
+        # Filters
+        year = request.GET.get('academic_year')
+        sem = request.GET.get('semester')
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+
+        today = timezone.now().date()
+        if not year:
+            year = determine_academic_year_start(today)
+        if not sem:
+            sem = str(determine_semester(today))
+
+        # Get date range from semester if not explicitly provided
+        if not (start_date and end_date) and year and sem and sem.isdigit():
+            from utils.date_utils import get_semester_date_range
+            try:
+                start, end = get_semester_date_range(year, int(sem))
+                # Convert to string for template
+                start_date = start.strftime("%Y-%m-%d")
+                end_date = end.strftime("%Y-%m-%d")
+            except (ValueError, IndexError):
+                start = end = None
+        else:
+            # Parse explicit date range
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+                end = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
+            except ValueError:
+                start = end = None
+
+        # Apply filters
+        if year:
+            asst = asst.filter(assign__academic_year__icontains=year)
+        if sem and sem.isdigit():
+            asst = asst.filter(assign__semester=int(sem))
+            
+        # Get week dates first
+        week_start_str = request.GET.get('week_start')
+        try:
+            base_date = datetime.strptime(week_start_str, "%Y-%m-%d").date() if week_start_str else today
+        except ValueError:
+            base_date = today
+
+        monday_start = base_date - timedelta(days=base_date.weekday())
+        days = [day[0] for day in DAYS_OF_WEEK]  # Define days early
+        day_to_date = {
+            day_name: (monday_start + timedelta(days=idx)).strftime('%Y-%m-%d')
+            for idx, day_name in enumerate(days)
+        }
+        prev_week_start = (monday_start - timedelta(days=7)).strftime('%Y-%m-%d')
+        next_week_start = (monday_start + timedelta(days=7)).strftime('%Y-%m-%d')
+
+        # Filter by date range if provided
+        if start and end:
+            # Convert day names to dates for the current week
+            day_dates = {
+                day: datetime.strptime(day_to_date[day], "%Y-%m-%d").date()
+                for day in days
+            }
+            # Only keep assignments whose day falls within the date range
+            asst = asst.filter(day__in=[
+                day for day, date in day_dates.items()
+                if start <= date <= end
+            ])
+
+
+
+
+
+        # Slots + Break/Lunch
+        base_slots = [slot[0] for slot in TIME_SLOTS]
+        time_slots = []
+        for slot in base_slots:
+            time_slots.append(slot)
+            if slot == '9:30 - 10:30':
+                time_slots.append(BREAK_PERIOD)
+            elif slot == '12:40 - 1:30':
+                time_slots.append(LUNCH_PERIOD)
+
+        # Build timetable (match student structure exactly)
+        timetable = {day: {slot: None for slot in time_slots} for day in days}
+        for at in asst:
+            if at.day in timetable and at.period in timetable[at.day]:
+                timetable[at.day][at.period] = {
+                    'subject': at.assign.subject,
+                    'teacher': at.assign.teacher,
+                    'assignment': at.assign
+                }
+
+        # Year options cho filter
+        year_options = (
+            AssignTime.objects
+            .filter(assign__teacher_id=teacher_id)
+            .values_list('assign__academic_year', flat=True)
+            .distinct()
+            .order_by('assign__academic_year')
+        )
 
         context = {
-            'class_matrix': class_matrix,
-            'time_slots': TIMETABLE_TIME_SLOTS,
+            'teacher': teacher,  # Add teacher object
+            'timetable': timetable,
+            'days': days,
+            'day_to_date': day_to_date,
+            'time_slots': time_slots,  # Keep same name as template expects
+            'week_start': monday_start.strftime('%Y-%m-%d'),
+            'prev_week_start': prev_week_start,
+            'next_week_start': next_week_start,
+
+            'academic_year': year,
+            'semester': sem,
+            'year_options': list(year_options),
+            'today': today.strftime('%Y-%m-%d'),
+            'start_date': start_date if start_date else '',
+            'end_date': end_date if end_date else '',
         }
         return render(request, 't_timetable.html', context)
 

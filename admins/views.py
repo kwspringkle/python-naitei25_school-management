@@ -239,6 +239,8 @@ def teaching_assignments(request):
         teacher = filter_form.cleaned_data.get('teacher')
         subject = filter_form.cleaned_data.get('subject')
         class_id = filter_form.cleaned_data.get('class_id')
+        academic_year = filter_form.cleaned_data.get('academic_year')
+        semester = filter_form.cleaned_data.get('semester')
 
         if teacher:
             assignments = assignments.filter(teacher=teacher)
@@ -246,6 +248,10 @@ def teaching_assignments(request):
             assignments = assignments.filter(subject=subject)
         if class_id:
             assignments = assignments.filter(class_id=class_id)
+        if academic_year:
+            assignments = assignments.filter(academic_year__icontains=academic_year)
+        if semester:
+            assignments = assignments.filter(semester=int(semester))
 
     # Pagination
     paginator = Paginator(assignments, PAGE_SIZE)  # 10 entries per page
@@ -353,6 +359,8 @@ def timetable(request):
         class_id = filter_form.cleaned_data.get('class_id')
         teacher = filter_form.cleaned_data.get('teacher')
         day = filter_form.cleaned_data.get('day')
+        academic_year = filter_form.cleaned_data.get('academic_year')
+        semester = filter_form.cleaned_data.get('semester')
 
         if class_id:
             timetable_entries = timetable_entries.filter(
@@ -362,6 +370,10 @@ def timetable(request):
                 assign__teacher=teacher)
         if day:
             timetable_entries = timetable_entries.filter(day=day)
+        if academic_year:
+            timetable_entries = timetable_entries.filter(assign__academic_year__icontains=academic_year)
+        if semester:
+            timetable_entries = timetable_entries.filter(assign__semester=int(semester))
 
     context = {
         'timetable_entries': timetable_entries,
@@ -377,19 +389,30 @@ def add_timetable_entry(request):
     """
     View for adding new timetable entry
     """
+    year = request.GET.get('academic_year')
+    sem = request.GET.get('semester')
     if request.method == 'POST':
-        form = TimetableForm(request.POST)
+        form = TimetableForm(request.POST, year=year, semester=sem)
         if form.is_valid():
             form.save()
             messages.success(request, _(
                 'Timetable entry has been added successfully!'))
-            return redirect('timetable')
+            from urllib.parse import urlencode
+            redirect_url = reverse('timetable')
+            params = {}
+            if year:
+                params['academic_year'] = year
+            if sem:
+                params['semester'] = sem
+            if params:
+                redirect_url = f"{redirect_url}?{urlencode(params)}"
+            return redirect(redirect_url)
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, _(error))
     else:
-        form = TimetableForm()
+        form = TimetableForm(year=year, semester=sem)
 
     context = {
         'form': form,
@@ -411,19 +434,30 @@ def edit_timetable_entry(request, entry_id):
         messages.error(request, _('The timetable entry does not exist!'))
         return redirect('timetable')
 
+    year = request.GET.get('academic_year')
+    sem = request.GET.get('semester')
     if request.method == 'POST':
-        form = TimetableForm(request.POST, instance=entry)
+        form = TimetableForm(request.POST, instance=entry, year=year, semester=sem)
         if form.is_valid():
             form.save()
             messages.success(request, _(
                 'Timetable entry has been updated successfully!'))
-            return redirect('timetable')
+            from urllib.parse import urlencode
+            redirect_url = reverse('timetable')
+            params = {}
+            if year:
+                params['academic_year'] = year
+            if sem:
+                params['semester'] = sem
+            if params:
+                redirect_url = f"{redirect_url}?{urlencode(params)}"
+            return redirect(redirect_url)
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, _(error))
     else:
-        form = TimetableForm(instance=entry)
+        form = TimetableForm(instance=entry, year=year, semester=sem)
 
     context = {
         'form': form,

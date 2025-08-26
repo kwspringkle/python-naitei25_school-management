@@ -367,6 +367,55 @@ def student_timetable(request, class_id):
     # Get class and its assignments
     class_obj = get_object_or_404(Class, id=class_id)
     assignments = Assign.objects.filter(class_id=class_obj)
+
+    # Filters for academic year and semester
+    year = request.GET.get('academic_year')
+    sem = request.GET.get('semester')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Get current academic year/semester if not provided
+    from utils.date_utils import determine_semester, determine_academic_year_start
+    today = date.today()
+    if not year:
+        year = determine_academic_year_start(today)
+    if not sem:
+        sem = str(determine_semester(today))
+
+    # Get date range from semester if not explicitly provided
+    if not (start_date and end_date) and year and sem and sem.isdigit():
+        from utils.date_utils import get_semester_date_range
+        try:
+            start, end = get_semester_date_range(year, int(sem))
+            # Convert to string for template
+            start_date = start.strftime("%Y-%m-%d")
+            end_date = end.strftime("%Y-%m-%d")
+        except (ValueError, IndexError):
+            start = end = None
+    else:
+        # Parse explicit date range
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+            end = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
+        except ValueError:
+            start = end = None
+
+    # Apply filters
+    if year:
+        assignments = assignments.filter(academic_year__icontains=year)
+    if sem and sem.isdigit():
+        assignments = assignments.filter(semester=int(sem))
+
+    # Get available academic years for filter
+    year_options = (
+        Assign.objects
+        .filter(class_id=class_obj)
+        .values_list('academic_year', flat=True)
+        .distinct()
+        .order_by('academic_year')
+    )
+
+
     
     # Get week dates
     week_start_str = request.GET.get('week_start')
@@ -400,8 +449,23 @@ def student_timetable(request, class_id):
     # Initialize and fill timetable
     timetable = {day: {slot: None for slot in time_slots_with_breaks} for day in days}
     
+    # Convert day names to dates for the current week
+    day_dates = {
+        day: datetime.strptime(day_to_date[day], "%Y-%m-%d").date()
+        for day in days
+    }
+    
     for assignment in assignments:
-        for assign_time in AssignTime.objects.filter(assign=assignment):
+        assign_times = AssignTime.objects.filter(assign=assignment)
+        
+        # Filter by date range if provided
+        if start and end:
+            assign_times = assign_times.filter(day__in=[
+                day for day, date in day_dates.items()
+                if start <= date <= end
+            ])
+            
+        for assign_time in assign_times:
             if assign_time.day in timetable and assign_time.period in timetable[assign_time.day]:
                 timetable[assign_time.day][assign_time.period] = {
                     'subject': assignment.subject,
@@ -419,6 +483,12 @@ def student_timetable(request, class_id):
         'week_start': monday_start.strftime('%Y-%m-%d'),
         'prev_week_start': prev_week_start,
         'next_week_start': next_week_start,
+        'academic_year': year,
+        'semester': sem,
+        'year_options': list(year_options),
+        'today': today.strftime('%Y-%m-%d'),
+        'start_date': start_date if start_date else '',
+        'end_date': end_date if end_date else '',
     }
     
     return render(request, 'students/timetable.html', context)

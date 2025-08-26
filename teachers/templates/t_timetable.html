@@ -1,57 +1,218 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load i18n %}
+{% load dict_extras %}
 
 {% block content %}
+{% load static %}
 <div class="container">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h2 class="text-center">
-                    {% trans "Timetable" %}
-                </h2>
-            </div>
-            <div id="no-more-tables">
-                <div class="table-responsive">
-                    <table class="col-sm-12 table table-bordered table-striped table- cf " id="dataTable" width="100%"
-                        cellspacing="0">
-                        <thead class="cf">
-                            <tr>
-                                <th> </th>
-                                {% for time_slot in time_slots %}
-                                <th>{% trans time_slot %}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for i in class_matrix %}
-                            <tr>
-                                {% for j in i %}
-                                {% if forloop.counter == 1 %}
-                                <td><b>{{ j }}</b></td>
-                                {% elif j == True %}
-                                <td></td>
-                                {% else %}
-                                <td>
-                                    <a href="{% url 'free_teachers' j.id %}"onclick="openPopup('{% url 'free_teachers' j.id %}'); return false;">
-                                        {{ j.assign.class_id }} {{ j.assign.subject.shortname }}
-                                    </a>
-                                </td>
-                                {% endif %}
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+
+  <!-- Header with week navigation (match students' layout) -->
+  <div class="row mb-3">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <a class="btn btn-outline-primary"
+        href="?week_start={{ prev_week_start }}&academic_year={{ academic_year }}&semester={{ semester }}">
+       &laquo; {% trans "Previous week" %}
+     </a>
+      <div class="text-center">
+        <strong>{% trans "Week starting" %}:</strong>
+        <span>{{ week_start }}</span>
+      </div>
+        <a class="btn btn-outline-primary"
+    href="?week_start={{ next_week_start }}&academic_year={{ academic_year }}&semester={{ semester }}">
+    {% trans "Next week" %} &raquo;
+    </a>
     </div>
+  </div>
+
+  <!-- Year/Semester filters -->
+  <div class="row mb-3">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-body">
+          <form method="get" class="form-inline justify-content-center">
+            <input type="hidden" name="week_start" value="{{ week_start }}" />
+            
+            <!-- Academic Year -->
+            <div class="form-group mx-2">
+              <label for="academic_year" class="mr-2">{% trans "Academic Year" %}</label>
+              <select id="academic_year" name="academic_year" class="form-control">
+                <option value="">{% trans "All years" %}</option>
+                {% for y in year_options %}
+                  <option value="{{ y }}" {% if y == academic_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+                          <!-- Semester -->
+              <div class="form-group mx-2">
+                <label for="semester" class="mr-2">{% trans "Semester" %}</label>
+                <select id="semester" name="semester" class="form-control">
+                  <option value="">{% trans "All semesters" %}</option>
+                  <option value="1" {% if semester == '1' %}selected{% endif %}>1</option>
+                  <option value="2" {% if semester == '2' %}selected{% endif %}>2</option>
+                  <option value="3" {% if semester == '3' %}selected{% endif %}>3</option>
+                </select>
+              </div>
+
+              <!-- Date Range -->
+              <div class="form-group mx-2">
+                <label for="start_date" class="mr-2">{% trans "From" %}</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" 
+                       value="{{ start_date }}" min="2024-01-01" max="2025-12-31">
+              </div>
+              <div class="form-group mx-2">
+                <label for="end_date" class="mr-2">{% trans "To" %}</label>
+                <input type="date" id="end_date" name="end_date" class="form-control"
+                       value="{{ end_date }}" min="2024-01-01" max="2025-12-31">
+              </div>
+
+              <!-- Buttons -->
+            <div class="form-group mx-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter mr-1"></i>{% trans "Apply Filter" %}
+              </button>
+              <a href="?week_start={{ week_start }}" class="btn btn-outline-secondary ml-2">
+                <i class="fas fa-times mr-1"></i>{% trans "Clear" %}
+              </a>
+            </div>
+          </form>
+
+                      {% if academic_year or semester or start_date or end_date %}
+              <div class="text-center mt-3">
+                {% if academic_year or semester %}
+                  <span class="badge badge-info">
+                    {% if academic_year %}{{ academic_year }}{% endif %}
+                    {% if semester %}.{{ semester }}{% endif %}
+                  </span>
+                {% endif %}
+                {% if start_date or end_date %}
+                  <span class="badge badge-warning ml-2">
+                    {% if start_date %}{{ start_date }}{% endif %}
+                    {% if end_date %} - {{ end_date }}{% endif %}
+                  </span>
+                {% endif %}
+              </div>
+            {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <h2 class="text-center">{% trans "Timetable" %}
+        {% if academic_year or semester %}
+          <small class="text-muted">(
+            {% if academic_year %}{{ academic_year }}{% endif %}
+            {% if semester %}.{{ semester }}{% endif %}
+          )</small>
+        {% endif %}
+      </h2>
+    </div>
+  </div>
+
+
+
+  <!-- Timetable -->
+  <div class="row">
+    <div class="col-md-12">
+      <div id="no-more-tables">
+        <table class="table table-bordered table-striped table-condensed cf w-100">
+          <thead class="cf">
+            <tr>
+              <th></th>
+              {% for slot in time_slots %}
+                <th>
+                  {% if slot == "Break" %}
+                    {% trans "Break" %}
+                  {% elif slot == "Lunch" %}
+                    {% trans "Lunch" %}
+                  {% else %}
+                    {{ slot }}
+                  {% endif %}
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for day in days %}
+              <tr {% if day_to_date and day_to_date|lookup:day == today %}class="table-primary"{% endif %}>
+                <td>
+                  <b>{{ day }}</b>
+                  {% if day_to_date %}
+                    <div class="text-muted small">{{ day_to_date|lookup:day }}</div>
+                  {% endif %}
+                </td>
+                {% for slot in time_slots %}
+                  <td>
+                    {% if timetable|lookup:day|lookup:slot %}
+                      {% with timetable|lookup:day|lookup:slot as assignment %}
+                        <strong>{{ assignment.subject.name }}</strong><br>
+                        <small>{{ assignment.assignment.class_id }}</small>
+                      {% endwith %}
+                    {% else %}
+                      {% if slot == "Break" or slot == "Lunch" %}
+                        <em>{% if slot == "Break" %}{% trans "Break" %}{% else %}{% trans "Lunch" %}{% endif %}</em>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Week Navigation -->
+  <div class="row mt-4 mb-3">
+    <div class="col-md-12">
+      <nav class="d-flex justify-content-center">
+        <ul class="pagination">
+          <li class="page-item">
+            <a class="page-link" href="?week_start={{ prev_week_start }}&academic_year={{ academic_year }}&semester={{ semester }}&start_date={{ start_date }}&end_date={{ end_date }}">
+              <i class="fas fa-chevron-left"></i>
+              {% trans "Previous Week" %}
+            </a>
+          </li>
+          <li class="page-item">
+            <form class="d-flex align-items-center mx-2" method="get" style="margin-bottom: 0;">
+              <input type="hidden" name="academic_year" value="{{ academic_year }}">
+              <input type="hidden" name="semester" value="{{ semester }}">
+              <input type="hidden" name="start_date" value="{{ start_date }}">
+              <input type="hidden" name="end_date" value="{{ end_date }}">
+              <div class="input-group">
+                <input type="date" 
+                       name="week_start" 
+                       class="form-control" 
+                       value="{{ week_start }}"
+                       style="width: 150px;"
+                       min="2024-01-01" 
+                       max="2025-12-31">
+                <div class="input-group-append">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-calendar-alt"></i>
+                    {% trans "Go" %}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?week_start={{ next_week_start }}&academic_year={{ academic_year }}&semester={{ semester }}&start_date={{ start_date }}&end_date={{ end_date }}">
+              {% trans "Next Week" %}
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
 </div>
+{% endblock %}
 
-<script>
-function openPopup(url) {
-    window.open(url, 'newwindow', 'width=700,height=500');
-}
-</script>
-
+{% block scripts %}
+<script src="{% static 'teachers/js/timetable.js' %}"></script>
 {% endblock %}

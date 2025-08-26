@@ -43,15 +43,28 @@ class Assign(models.Model):
     class_id = models.ForeignKey(ADMINS_CLASS_MODEL, on_delete=models.RESTRICT)
     subject = models.ForeignKey(ADMINS_SUBJECT_MODEL, on_delete=models.RESTRICT)
     teacher = models.ForeignKey(Teacher, on_delete=models.RESTRICT)
+    academic_year = models.CharField(max_length=20, default="2024-2025")
+    semester = models.IntegerField(default=1)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = (('subject', 'class_id', 'teacher'),)
+        unique_together = (('subject', 'class_id', 'teacher', 'academic_year', 'semester'),)
+
+    @property
+    def year_sem(self):
+        """Return display format 'YYYY.S' from academic_year and semester.
+        Picks the first 4-digit year if academic_year is like '2024-2025'."""
+        import re
+        year_str = str(self.academic_year)
+        match = re.search(r"\d{4}", year_str)
+        year = match.group(0) if match else year_str
+        return f"{year}.{self.semester}"
 
     def __str__(self):
         cl = self.class_id
         sname = self.subject
         te = self.teacher
-        return '%s : %s : %s' % (te.name, sname.shortname, cl)
+        return f"{te.name} : {sname.shortname} : {cl} {self.year_sem}"
 
 
 class AssignTime(models.Model):

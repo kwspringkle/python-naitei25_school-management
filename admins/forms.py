@@ -34,6 +34,7 @@ from utils.constant import (
 from students.models import Student
 from teachers.models import Teacher, Assign, AssignTime
 from admins.models import User, Dept, Class, Subject
+from utils.date_utils import determine_semester, determine_academic_year_start
 
 
 class UnifiedLoginForm(forms.Form):
@@ -538,32 +539,88 @@ class TeachingAssignmentForm(forms.ModelForm):
         label=_('Class')
     )
 
+    # Giới hạn kỳ học 1..3 theo yêu cầu (2 năm chỉ có 3 kỳ)
+    semester = forms.ChoiceField(
+        choices=[(1, '1'), (2, '2'), (3, '3')],
+        widget=forms.Select(attrs={'class': 'form-control', 'required': True}),
+        label=_('Semester')
+    )
+
     class Meta:
         model = Assign
-        fields = ['teacher', 'subject', 'class_id']
+        fields = ['teacher', 'subject', 'class_id', 'academic_year', 'semester', 'is_active']
         labels = {
             'teacher': _('Teacher'),
             'subject': _('Subject'),
-            'class_id': _('Class')
+            'class_id': _('Class'),
+            'academic_year': _('Academic Year'),
+            'semester': _('Semester'),
+            'is_active': _('Active'),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Năm học chỉ nhập 4 chữ số (ví dụ 2025)
+        self.fields['academic_year'].widget = forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': _('e.g., 2025'),
+            'required': True
+        })
+        # Thêm trường is_active với giá trị mặc định là True
+        self.fields['is_active'] = forms.BooleanField(
+            widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            label=_('Active'),
+            initial=True,
+            required=False  # Cho phép unchecked
+        )
+        # Gợi ý mặc định theo ngày hiện tại
+        from datetime import date
+        today = date.today()
+        self.fields['semester'].initial = determine_semester(today)
+        self.fields['academic_year'].initial = determine_academic_year_start(today)
+
+    def clean_academic_year(self):
+        value = self.cleaned_data.get('academic_year', '').strip()
+        # Chấp nhận dạng '2025' hoặc '2025.1' và tách nếu cần
+        if '.' in value:
+            year_part = value.split('.')[0]
+        else:
+            year_part = value
+
+        if not year_part.isdigit() or len(year_part) != 4:
+            raise forms.ValidationError(_('Academic year must be a 4-digit year like 2025'))
+        return year_part
+
     def clean(self):
-        cleaned_data = super().clean()
-        teacher = cleaned_data.get('teacher')
-        subject = cleaned_data.get('subject')
-        class_id = cleaned_data.get('class_id')
+        cleaned = super().clean()
+        # Không bắt buộc nhưng nếu đã nhập semester theo quy ước, giữ 1..3
+        sem = cleaned.get('semester')
+        if sem not in (1, 2, 3):
+            # Coerce string -> int if needed (since ChoiceField returns str)
+            try:
+                sem_int = int(sem)
+            except Exception:
+                sem_int = None
+            if sem_int not in (1, 2, 3):
+                cleaned['semester'] = determine_semester(__import__('datetime').date.today())
+        return cleaned
 
-        if teacher and subject and class_id:
-            if Assign.objects.filter(
-                teacher=teacher,
-                subject=subject,
-                class_id=class_id
-            ).exists():
-                raise forms.ValidationError(
-                    _('This assignment already exists!')
-                )
+    def clean_academic_year(self):
+        """
+        Validate năm học phải là số 4 chữ số
+        """
+        academic_year = self.cleaned_data.get('academic_year', '').strip()
 
-        return cleaned_data
+        # Validate năm học
+        if '.' in academic_year:
+            year_part = academic_year.split('.')[0]
+        else:
+            year_part = academic_year
+
+        if not year_part.isdigit() or len(year_part) != 4:
+            raise forms.ValidationError(_('Academic year must be a 4-digit year like 2025'))
+
+        return year_part
 
 
 class TeachingAssignmentFilterForm(forms.Form):
@@ -598,6 +655,22 @@ class TeachingAssignmentFilterForm(forms.Form):
             'placeholder': _('Select class')
         }),
         label=_('Class')
+    )
+
+    academic_year = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': _('e.g., 2025')
+        }),
+        label=_('Academic Year')
+    )
+
+    semester = forms.ChoiceField(
+        required=False,
+        choices=[('', _('All'))] + [(str(i), str(i)) for i in range(1, 4)],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label=_('Semester')
     )
 
 
@@ -636,6 +709,15 @@ class TimetableForm(forms.ModelForm):
     """
     Form for managing timetable
     """
+    def __init__(self, *args, year: str | None = None, semester: str | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Nếu có tham số năm/kỳ từ URL, lọc danh sách Assign tương ứng
+        qs = Assign.objects.all()
+        if year:
+            qs = qs.filter(academic_year__icontains=year)
+        if semester and semester.isdigit():
+            qs = qs.filter(semester=int(semester))
+        self.fields['assign'].queryset = qs
     assign = forms.ModelChoiceField(
         queryset=Assign.objects.all(),
         widget=forms.Select(attrs={
@@ -727,6 +809,22 @@ class TimetableFilterForm(forms.Form):
             'class': 'form-control'
         }),
         label=_('Day of Week')
+    )
+
+    academic_year = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': _('e.g., 2025')
+        }),
+        label=_('Academic Year')
+    )
+
+    semester = forms.ChoiceField(
+        required=False,
+        choices=[('', _('All'))] + [(str(i), str(i)) for i in range(1, 4)],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label=_('Semester')
     )
 
 class EditStudentForm(forms.ModelForm):
@@ -987,7 +1085,18 @@ class AddSubjectToClassForm(forms.Form):
             self.fields['teacher'].queryset = Teacher.objects.none()
         
         if class_obj:
-            assigned_subjects = Assign.objects.filter(class_id=class_obj).values_list('subject', flat=True)
+            # Xác định năm học và kỳ học hiện tại
+            from datetime import date
+            today = date.today()
+            current_semester = determine_semester(today)
+            current_year = determine_academic_year_start(today)
+            
+            # Chỉ lọc các môn học đã được phân công trong cùng kỳ học
+            assigned_subjects = Assign.objects.filter(
+                class_id=class_obj,
+                academic_year=current_year,
+                semester=current_semester
+            ).values_list('subject', flat=True)
             self.fields['subject'].queryset = Subject.objects.exclude(id__in=assigned_subjects)
 
     def clean(self):
@@ -996,14 +1105,33 @@ class AddSubjectToClassForm(forms.Form):
         teacher = cleaned_data.get('teacher')
 
         if subject and teacher and self.class_obj:
-            # Kiểm tra xem subject đã được assign cho teacher và class hay chưa
+            # Xác định năm học và kỳ học hiện tại
+            from datetime import date
+            today = date.today()
+            current_semester = determine_semester(today)
+            current_year = determine_academic_year_start(today)
+
+            # Kiểm tra trùng lặp hoàn toàn
             if Assign.objects.filter(
                 class_id=self.class_obj,
                 subject=subject,
-                teacher=teacher
+                teacher=teacher,
+                academic_year=current_year,
+                semester=current_semester
             ).exists():
                 raise forms.ValidationError(
-                    _('This subject is already assigned to this class with the selected teacher.')
+                    _('This subject is already assigned to this class with the selected teacher in this semester.')
+                )
+
+            # Kiểm tra trùng lặp môn học trong cùng lớp và kỳ học
+            if Assign.objects.filter(
+                class_id=self.class_obj,
+                subject=subject,
+                academic_year=current_year,
+                semester=current_semester
+            ).exists():
+                raise forms.ValidationError(
+                    _('This subject is already assigned to this class in this semester.')
                 )
         return cleaned_data
 
