@@ -1,0 +1,28 @@
+{% load i18n %}
+{% if users.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination-modern">
+        {% if users.has_previous %}
+        <li>
+            <a class="page-link" href="?page={{ users.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% if request.GET.dir %}&dir={{ request.GET.dir }}{% endif %}{% endif %}">
+                {% trans "Previous" %}<i class="fas fa-chevron-left ms-1"></i>
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for num in users.paginator.page_range %}
+        <li {% if users.number == num %}class="active"{% endif %}>
+            <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% if request.GET.dir %}&dir={{ request.GET.dir }}{% endif %}{% endif %}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        
+        {% if users.has_next %}
+        <li>
+            <a class="page-link" href="?page={{ users.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% if request.GET.dir %}&dir={{ request.GET.dir }}{% endif %}{% endif %}">
+                {% trans "Next" %}<i class="fas fa-chevron-right ms-1"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

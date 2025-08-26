@@ -1,0 +1,109 @@
+{% extends 'admins/base.html' %}
+{% load i18n user_tags table_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="welcome-card">
+        <h2>{{ title }}</h2>
+        <p class="mb-0 opacity-75">{% trans "View and manage all user accounts" %}</p>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="action-card">
+                <!-- Search and Filter Section -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <form method="get" class="d-flex align-items-center flex-wrap" style="gap: 0.5rem; font-family: 'Roboto', sans-serif;">
+                        <input type="text" name="q" class="form-control filter-field" placeholder="{% trans 'Search by username or email' %}" value="{{ request.GET.q|default:'' }}" aria-label="{% trans 'Search by username or email' %}" style="height: 40px; width: 400px; font-family: 'Roboto', sans-serif;">
+                        
+                        <select name="is_active" class="form-control filter-field" onchange="this.form.submit()" aria-label="{% trans 'Filter by status' %}" style="height: 35px; width: 120px;font-family: 'Roboto', sans-serif;">
+                            <option value="">{% trans "All Status" %}</option>
+                            <option value="True" {% if request.GET.is_active == 'True' %}selected{% endif %}>{% trans "Active" %}</option>
+                            <option value="False" {% if request.GET.is_active == 'False' %}selected{% endif %}>{% trans "Inactive" %}</option>
+                        </select>
+                        
+                        <select name="role" class="form-control filter-field" onchange="this.form.submit()" aria-label="{% trans 'Filter by role' %}" style="height: 35px; width: 110px;font-family: 'Roboto', sans-serif;">
+                            <option value="">{% trans "All Roles" %}</option>
+                            <option value="admin" {% if request.GET.role == 'admin' %}selected{% endif %}>{% trans "Admin" %}</option>
+                            <option value="student" {% if request.GET.role == 'student' %}selected{% endif %}>{% trans "Student" %}</option>
+                            <option value="teacher" {% if request.GET.role == 'teacher' %}selected{% endif %}>{% trans "Teacher" %}</option>
+                        </select>
+                        
+                        <button type="submit" class="btn btn-primary" style="height: 40px; font-family: 'Roboto', sans-serif; background-color: #007bff; border-color: #007bff;" aria-label="{% trans 'Search users' %}">
+                            <i class="fas fa-search me-2"></i>
+                        </button>
+                    </form>
+                    <a href="{% url 'add_user' %}" class="btn-add-modern">
+                        <i class="fas fa-plus me-2"></i>{% trans "Add New User" %}
+                    </a>
+                </div>
+
+                <div class="table-modern">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                {% sortable_column "username" "Username" %}
+                                {% sortable_column "full_name" "Full Name" %}
+                                {% sortable_column "email" "Email" %}
+                                {% sortable_column "role" "Role" %}
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr {% if not user.is_active %}style="background-color: #f8d7da;"{% endif %}>
+                                <td data-label="{% trans 'Username' %}">
+                                    <strong class="text-purple">{{ user.username }}</strong>
+                                </td>
+                                <td data-label="{% trans 'Full Name' %}">{{ user.get_full_name|default:user.username }}</td>
+                                <td data-label="{% trans 'Email' %}">{{ user.email }}</td>
+                                <td data-label="{% trans 'Role' %}">
+                                    {% user_role_badge user %}
+                                </td>
+                                <td data-label="{% trans 'Active' %}">
+                                    {% if user.is_active %}
+                                        <span class="badge">{% trans "Yes" %}</span>
+                                    {% else %}
+                                        <span class="badge">{% trans "No" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="{% trans 'Actions' %}">
+                                    <div class="btn-group-custom">
+                                        <a href="{% url 'edit_user' user.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit me-1"></i> {% trans "Edit" %}
+                                        </a>
+                                        <a href="{% url 'toggle_user_status' user.id %}" 
+                                           class="btn btn-sm {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}"onclick='return confirm("{% trans 'Are you sure you want to toggle the status of this user?' %}");'>
+                                            <i class="fas {% if user.is_active %}fa-lock{% else %}fa-unlock{% endif %} me-1"></i> 
+                                            {% if user.is_active %}{% trans "Deactivate" %}{% else %}{% trans "Activate" %}{% endif %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fas fa-users"></i>
+                                        <h5>{% trans "No users found" %}</h5>
+                                        <p>{% trans "Start by creating your first user" %}</p>
+                                        <a href="{% url 'add_user' %}" class="btn-add-modern">
+                                            <i class="fas fa-plus me-2"></i>{% trans "Add New User" %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% include 'admins/partials/pagination.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -347,7 +347,18 @@ body {
     justify-content: center;
     margin: 2rem 0 1rem 0;
     gap: 0.5rem;
+    list-style: none;
+    padding-left: 0;
 }
+
+.pagination-modern li {
+    list-style: none; 
+}
+
+.pagination-modern li::marker {
+    content: none; 
+}
+
 .pagination-modern .page-link {
     color: #764ba2;
     border: 1px solid #e0e0e0;
@@ -586,4 +597,52 @@ body {
     .table-departments td:nth-child(3) {
         width: auto;
     }
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+.opacity-50 {
+    opacity: 0.5;
+}
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+
+.filter-form {
+    gap: 1rem;
+    font-family: 'Roboto', sans-serif;
+}
+
+.filter-field {
+    height: 40px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.role-filter {
+    border: none;
+    color: #6c757d !important; 
+    font-family: 'Roboto', sans-serif;
+    background-color: #fff; 
+}
+
+.role-filter:focus {
+    border: none; 
+    box-shadow: none; 
+    color: #6c757d !important; 
+}
+
+.search-btn {
+    height: 25px;
+    font-family: 'Roboto', sans-serif;
+    background-color: #007bff;
+    border-color: #007bff;
 }
