@@ -41,6 +41,10 @@ from .forms import (
 from students.models import Student, Attendance, StudentSubject, AttendanceTotal
 from teachers.models import Teacher, Assign, AssignTime, Marks, ExamSession, AttendanceClass
 from admins.models import User, Dept, Subject, Class
+from django.core.mail import send_mail
+from django.conf import settings
+from django.template.loader import render_to_string
+
 
 
 @csrf_protect
@@ -145,8 +149,29 @@ def add_student(request):
                         class_id=form.cleaned_data['class_id']
                     )
 
+                    # Email 
+                    email_context = {
+                        'full_name': student.name,
+                        'username': user.username,
+                        'password': form.cleaned_data['password'], 
+                    }
+                    email_subject = _('Welcome to Our School System')
+                    email_body = render_to_string('admins/email_templates/account_creation_email.html', email_context)
+                    email_from = settings.DEFAULT_FROM_EMAIL
+                    email_to = [user.email]
+
+                    # Send email
+                    send_mail(
+                        subject=email_subject,
+                        message=email_body, 
+                        from_email=email_from,
+                        recipient_list=email_to,
+                        html_message=email_body,  
+                        fail_silently=False,
+                    )
+
                     messages.success(request, _(
-                        'Student "{}" has been successfully added.').format(student.name))
+                        'Student "{}" has been successfully added and an email has been sent.').format(student.name))
                     return redirect('admin_dashboard')
 
             except Exception as e:
@@ -201,9 +226,29 @@ def add_teacher(request):
                         phone=form.cleaned_data['phone'],
                         dept=form.cleaned_data['dept']
                     )
+                    # Email 
+                    email_context = {
+                        'full_name': teacher.name,
+                        'username': user.username,
+                        'password': form.cleaned_data['password'], 
+                    }
+                    email_subject = _('Welcome to Our School System')
+                    email_body = render_to_string('admins/email_templates/account_creation_email.html', email_context)
+                    email_from = settings.DEFAULT_FROM_EMAIL
+                    email_to = [user.email]
+
+                    # Send email
+                    send_mail(
+                        subject=email_subject,
+                        message=email_body, 
+                        from_email=email_from,
+                        recipient_list=email_to,
+                        html_message=email_body,  
+                        fail_silently=False,
+                    )
 
                     messages.success(request, _(
-                        'Teacher "{}" has been successfully added.').format(teacher.name))
+                        'Teacher "{}" has been successfully added and an email has been sent..').format(teacher.name))
                     return redirect('admin_dashboard')
 
             except Exception as e:
