@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<style>
+  .info-item {
+    text-align: center;
+    padding: 10px;
+  }
+  .info-item i {
+    display: block;
+    margin-bottom: 10px;
+  }
+  .info-item h6 {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  .info-item p {
+    font-size: 1.1em;
+    font-weight: 500;
+  }
+</style>
+
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card bg-info text-white">
+      <div class="card-header">
+        <h4 class="mb-0">
+          <i class="fas fa-users"></i> {% trans "Danh sách sinh viên" %}: {{ subject.name }}
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="info-item text-center">
+              <i class="fas fa-university fa-2x mb-2"></i>
+              <h6>{% trans "Khoa" %}</h6>
+              <p class="mb-0">{{ class_obj.dept.name }}</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="info-item text-center">
+              <i class="fas fa-users fa-2x mb-2"></i>
+              <h6>{% trans "Lớp học" %}</h6>
+              <p class="mb-0">
+                {{ class_obj.dept.name }} : {{ class_obj.sem }}{{ class_obj.section }}
+              </p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="info-item text-center">
+              <i class="fas fa-book fa-2x mb-2"></i>
+              <h6>{% trans "Môn học" %}</h6>
+              <p class="mb-0">{{ subject.name }}</p>
+              <small class="text-white">({{ subject.shortname }})</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="info-item text-center">
+              <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+              <h6>{% trans "Năm học - Kỳ" %}</h6>
+              <p class="mb-0">{{ assignment.academic_year }}</p>
+              <small class="text-white">
+                {% trans "Học kỳ" %} {{ assignment.semester }} ({{ assignment.year_sem }})
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if students_page %}
+  <div class="card mb-3">
+    <div class="card-header">
+      <i class="fas fa-table"></i>
+      <b>{% trans "Danh sách sinh viên" %} ({{ students_total }} {% trans "học sinh" %})</b>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              <th>{% trans "Mã sinh viên" %}</th>
+              <th>{% trans "Tên sinh viên" %}</th>
+              <th>{% trans "Điểm danh" %}</th>
+              <th>{% trans "Điểm CIE" %}</th>
+              <th>{% trans "Tổng điểm" %}</th>
+              <th>{% trans "Chi tiết điểm" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student_data in students_page %}
+              <tr>
+                <td>{{ student_data.student.USN }}</td>
+                <td>{{ student_data.student.name }}</td>
+                <td>
+                  {% if student_data.total_classes > 0 %}
+                    <span class="badge bg-{% if student_data.attendance_percentage >= 75 %}success{% else %}danger{% endif %}">
+                      {{ student_data.attended_classes }}/{{ student_data.total_classes }} ({{ student_data.attendance_percentage }}%)
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">{% trans "Chưa có" %}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if student_data.cie_score > 0 %}
+                    <span class="badge bg-{% if student_data.cie_score >= 25 %}success{% else %}danger{% endif %}">
+                      {{ student_data.cie_score }}
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">{% trans "Chưa có" %}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if student_data.total_marks > 0 %}
+                    <span class="badge bg-info">{{ student_data.total_marks }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{% trans "Chưa có" %}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if student_data.marks %}
+                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#marksModal{{ student_data.student.USN }}">
+                      <i class="fas fa-eye"></i> {% trans "Xem" %}
+                    </button>
+                  {% else %}
+                    <span class="text-muted">{% trans "Chưa có điểm" %}</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <nav aria-label="Student pagination" class="mt-3">
+        <ul class="pagination justify-content-center">
+          {% if students_page.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ students_page.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">&laquo;</span>
+            </li>
+          {% endif %}
+
+          <li class="page-item disabled">
+            <span class="page-link">
+              {% trans "Page" %} {{ students_page.number }} / {{ students_page.paginator.num_pages }}
+            </span>
+          </li>
+
+          {% if students_page.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ students_page.next_page_number }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">&raquo;</span>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  {% for student_data in students_page %}
+    {% if student_data.marks %}
+      <div class="modal fade" id="marksModal{{ student_data.student.USN }}" tabindex="-1" aria-labelledby="marksModalLabel{{ student_data.student.USN }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="marksModalLabel{{ student_data.student.USN }}">
+                {% trans "Chi tiết điểm" %}: {{ student_data.student.name }}
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>{% trans "Loại bài kiểm tra" %}</th>
+                    <th>{% trans "Điểm" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for mark in student_data.marks %}
+                    <tr>
+                      <td>{{ mark.name }}</td>
+                      <td><strong>{{ mark.marks1 }}</strong></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr class="table-info">
+                    <td><strong>{% trans "Tổng cộng" %}</strong></td>
+                    <td><strong>{{ student_data.total_marks }}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                {% trans "Đóng" %}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+
+{% else %}
+  <div class="card mb-3">
+    <div class="card-body text-center">
+      <i class="fas fa-users fa-3x text-muted mb-3"></i>
+      <h4>{% trans "Không có sinh viên nào" %}</h4>
+      <p class="text-muted">
+        {% trans "Không có sinh viên nào trong lớp" %} {{ class_obj }}
+      </p>
+    </div>
+  </div>
+{% endif %}
+
+<div class="text-center mt-3">
+  <a href="{% url 't_clas' assignment.teacher.id 2 %}" class="btn btn-secondary btn-lg">
+    <i class="fas fa-arrow-left mr-2"></i>{% trans "Quay lại danh sách khóa học" %}
+  </a>
+</div>
+
+{% endblock %}

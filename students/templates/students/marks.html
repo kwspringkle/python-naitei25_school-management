@@ -11,6 +11,29 @@
     <b>{% trans "Marks" %}</b>
   </div>
   <div class="card-body">
+    <form method="get" class="mb-3">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <select name="academic_year" class="form-control">
+            <option value="">{% trans "All years" %}</option>
+            {% for y in academic_years %}
+              <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="semester" class="form-control">
+            <option value="">{% trans "All semesters" %}</option>
+            {% for s in available_semesters %}
+              <option value="{{ s }}" {% if selected_semester|stringformat:'s' == s|stringformat:'s' %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
+        </div>
+      </div>
+    </form>
     <div class="table-responsive">
       <table
         class="table table-bordered"

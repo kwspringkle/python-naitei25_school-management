@@ -98,10 +98,28 @@ def student_attendance(request, student_usn):
     
     # Get student's class
     student_class = student.class_id
-    
+
     # Get all subjects assigned to this class through Assign model
     from teachers.models import Assign
     class_assignments = Assign.objects.filter(class_id=student_class).select_related('subject', 'teacher')
+
+    # Filters for academic year and semester
+    year = request.GET.get('academic_year', '')
+    sem = request.GET.get('semester', '')
+
+    # Default to current if not provided
+    from utils.date_utils import determine_semester, determine_academic_year_start
+    today = date.today()
+    if not year:
+        year = determine_academic_year_start(today)
+    if not sem:
+        sem = str(determine_semester(today))
+
+    # Apply filters
+    if year:
+        class_assignments = class_assignments.filter(academic_year__icontains=year)
+    if sem and sem.isdigit():
+        class_assignments = class_assignments.filter(semester=int(sem))
     
     attendance_data = []
     for assignment in class_assignments:
@@ -137,10 +155,35 @@ def student_attendance(request, student_usn):
             'records': attendance_records
         })
     
+    # Build filter options for dropdowns
+    academic_year_strings = (
+        Assign.objects
+        .filter(class_id=student_class)
+        .values_list('academic_year', flat=True)
+        .distinct()
+    )
+    years_set = set()
+    for year_str in academic_year_strings:
+        import re
+        years_found = re.findall(r'\d{4}', str(year_str))
+        years_set.update(years_found)
+    academic_years = sorted(list(years_set), reverse=True)
+
+    available_semesters = sorted(list(
+        Assign.objects
+        .filter(class_id=student_class)
+        .values_list('semester', flat=True)
+        .distinct()
+    ))
+
     context = {
         'student': student,
         'student_class': student_class,
         'attendance_data': attendance_data,
+        'academic_years': academic_years,
+        'available_semesters': available_semesters,
+        'selected_year': year,
+        'selected_semester': sem,
     }
     
     return render(request, 'students/attendance.html', context)
@@ -308,15 +351,39 @@ def student_marks_list(request, student_usn):
     class_assignments = Assign.objects.filter(
         class_id=student_class
     ).select_related('subject', 'teacher')
+
+    # Filters for academic year and semester
+    year = request.GET.get('academic_year', '')
+    sem = request.GET.get('semester', '')
+
+    # Default to current if not provided
+    from utils.date_utils import determine_semester, determine_academic_year_start
+    today = date.today()
+    if not year:
+        year = determine_academic_year_start(today)
+    if not sem:
+        sem = str(determine_semester(today))
+
+    # Apply filters if valid
+    if year:
+        class_assignments = class_assignments.filter(academic_year__icontains=year)
+    if sem and sem.isdigit():
+        class_assignments = class_assignments.filter(semester=int(sem))
     
     marks_data = []
     for assignment in class_assignments:
         # Get marks for this student and subject
         from teachers.models import Marks
-        marks = Marks.objects.filter(
+        marks_qs = Marks.objects.filter(
             student_subject__student=student,
-            student_subject__subject=assignment.subject
-        ).order_by('name')
+            student_subject__subject=assignment.subject,
+        )
+        # Lọc theo bộ lọc người dùng chọn (năm/kỳ)
+        if year:
+            marks_qs = marks_qs.filter(academic_year__icontains=year)
+        if sem and sem.isdigit():
+            marks_qs = marks_qs.filter(semester=int(sem))
+        marks = marks_qs.order_by('name')
         
         # Get attendance percentage
         attendance_records = Attendance.objects.filter(
@@ -340,10 +407,36 @@ def student_marks_list(request, student_usn):
             'attendance_percentage': attendance_percentage,
         })
     
+    # Build filter options
+    # Extract available years (from academic_year strings)
+    academic_year_strings = (
+        Assign.objects
+        .filter(class_id=student_class)
+        .values_list('academic_year', flat=True)
+        .distinct()
+    )
+    years_set = set()
+    for year_str in academic_year_strings:
+        import re
+        years_found = re.findall(r'\d{4}', str(year_str))
+        years_set.update(years_found)
+    academic_years = sorted(list(years_set), reverse=True)
+
+    available_semesters = sorted(list(
+        Assign.objects
+        .filter(class_id=student_class)
+        .values_list('semester', flat=True)
+        .distinct()
+    ))
+
     context = {
         'student': student,
         'student_class': student_class,
         'marks_data': marks_data,
+        'academic_years': academic_years,
+        'available_semesters': available_semesters,
+        'selected_year': year,
+        'selected_semester': sem,
     }
     
     return render(request, 'students/marks.html', context)

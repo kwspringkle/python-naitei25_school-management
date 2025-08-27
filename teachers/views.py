@@ -13,6 +13,7 @@ from students.models import Attendance, StudentSubject
 from django.db import transaction
 from utils.date_utils import determine_semester, determine_academic_year_start
 from datetime import datetime, timedelta, date
+import math
 
 from utils.constant import (
     DAYS_OF_WEEK, TIME_SLOTS, TIMETABLE_TIME_SLOTS,
@@ -20,7 +21,8 @@ from utils.constant import (
     TIMETABLE_SKIP_PERIODS, TIMETABLE_ACCESS_DENIED_MESSAGE,
     FREE_TEACHERS_NO_AVAILABLE_TEACHERS_MESSAGE, FREE_TEACHERS_NO_SUBJECT_KNOWLEDGE_MESSAGE,
     TEACHER_FILTER_DISTINCT_ENABLED, TEACHER_FILTER_BY_CLASS, TEACHER_FILTER_BY_SUBJECT_KNOWLEDGE, DATE_FORMAT,
-    ATTENDANCE_STANDARD, CIE_STANDARD,TEST_NAME_CHOICES, BREAK_PERIOD, LUNCH_PERIOD
+    ATTENDANCE_STANDARD, CIE_STANDARD,TEST_NAME_CHOICES, BREAK_PERIOD, LUNCH_PERIOD,
+    CIE_CALCULATION_LIMIT, CIE_DIVISOR
 )
 
 
@@ -101,8 +103,121 @@ def index(request):
 
 @login_required
 def t_clas(request, teacher_id, choice):
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    
     teacher1 = get_object_or_404(Teacher, id=teacher_id)
-    return render(request, 't_clas.html', {'teacher1': teacher1, 'choice': choice})
+    
+    # Lấy tất cả assignments của giáo viên (bao gồm cả các kỳ khác nhau)
+    assignments = Assign.objects.filter(
+        teacher=teacher1
+    ).select_related('class_id', 'subject', 'class_id__dept')
+    
+    # Debug removed
+    
+    # Lấy các tham số lọc từ request
+    selected_year = request.GET.get('academic_year', '')
+    selected_semester = request.GET.get('semester', '')
+    
+    # Debug removed
+    
+    # Áp dụng bộ lọc
+    if selected_year and selected_semester and selected_semester.isdigit():
+        # Lọc theo cả năm và kỳ cùng lúc để tránh nhầm lẫn
+        semester_int = int(selected_semester)
+        
+        # Tìm các assignments có year_sem khớp với yêu cầu
+        # Sử dụng property year_sem để lọc chính xác
+        target_year_sem = f"{selected_year}.{semester_int}"
+        # Debug removed
+        
+        # Lọc bằng cách kiểm tra academic_year và semester
+        # Chỉ lấy assignments mà year_sem property khớp với target
+        filtered_assignments = []
+        for ass in assignments:
+            if ass.year_sem == target_year_sem:
+                filtered_assignments.append(ass.id)
+        
+        assignments = assignments.filter(id__in=filtered_assignments)
+        # Debug removed
+        
+    elif selected_year:
+        # Nếu chỉ chọn năm, tìm tất cả academic_year chứa năm đó
+        assignments = assignments.filter(academic_year__icontains=selected_year)
+        # Debug removed
+    
+    elif selected_semester and selected_semester.isdigit():
+        # Nếu chỉ chọn kỳ
+        semester_int = int(selected_semester)
+        assignments = assignments.filter(semester=semester_int)
+        # Debug removed
+    
+    # Hiển thị kết quả cuối cùng
+    # Debug removed
+    
+    # Sắp xếp assignments
+    assignments = assignments.order_by('class_id__dept__name', 'class_id__sem', 'class_id__section', 'subject__name')
+    
+    # Pagination - 10 items per page
+    paginator = Paginator(assignments, 10)
+    page = request.GET.get('page')
+    
+    try:
+        assignments = paginator.page(page)
+    except PageNotAnInteger:
+        assignments = paginator.page(1)
+    except EmptyPage:
+        assignments = paginator.page(paginator.num_pages)
+    
+    # Lấy danh sách các năm học và học kỳ để hiển thị trong bộ lọc (tất cả assignments)
+    all_assignments_for_filter = Assign.objects.filter(teacher=teacher1)
+    
+    # Lấy tất cả academic_year và extract năm từ chúng
+    academic_year_strings = (
+        all_assignments_for_filter
+        .values_list('academic_year', flat=True)
+        .distinct()
+    )
+    
+    # Extract các năm từ academic_year (ví dụ: "2024-2025" -> ["2024", "2025"])
+    years_set = set()
+    for year_str in academic_year_strings:
+        import re
+        # Tìm tất cả số 4 chữ số trong academic_year
+        years_found = re.findall(r'\d{4}', str(year_str))
+        years_set.update(years_found)
+    
+    # Sắp xếp các năm giảm dần
+    academic_years = sorted(list(years_set), reverse=True)
+    
+    # Debug: Xem các năm học có sẵn
+    # Debug removed
+    
+    # Lấy các học kỳ có sẵn
+    available_semesters = sorted(list(
+        all_assignments_for_filter
+        .values_list('semester', flat=True)
+        .distinct()
+    ))
+    # Debug removed
+    
+    # Sử dụng học kỳ thực tế từ database hoặc fallback to 1-3
+    semesters = available_semesters if available_semesters else range(1, 4)
+    
+    # Convert selected_semester to int for template comparison
+    selected_semester_int = int(selected_semester) if selected_semester and selected_semester.isdigit() else None
+    
+    context = {
+        'teacher1': teacher1,
+        'choice': choice,
+        'assignments': assignments,
+        'academic_years': academic_years,
+        'semesters': semesters,
+        'available_semesters': available_semesters,
+        'selected_year': selected_year,
+        'selected_semester': selected_semester,
+        'selected_semester_int': selected_semester_int,
+    }
+    return render(request, 't_clas.html', context)
 
 # Hiển thị danh sách các phiên thi (ExamSession) của một assignment (môn học/lớp/giáo viên).
 
@@ -112,14 +227,16 @@ def t_marks_list(request, assign_id):
     assignment = get_object_or_404(Assign, id=assign_id)
     
     # Kiểm tra xem user hiện tại có phải là giáo viên của assignment này không
-    if assignment.teacher.user != request.user:
-        messages.error(request, 'Bạn không có quyền truy cập assignment này!')
+    if hasattr(assignment.teacher, 'user') and assignment.teacher.user and assignment.teacher.user != request.user:
+        messages.error(request, _('Bạn không có quyền truy cập assignment này!'))
         return redirect('teacher_dashboard')
     
+    # Lấy exam sessions của assignment này
     exam_sessions_list = ExamSession.objects.filter(assign=assignment)
     
     # Xử lý tạo bài kiểm tra mới
     if request.method == 'POST' and 'create_exam' in request.POST:
+        from utils.constant import TEST_NAME_CHOICES
         exam_name = request.POST.get('exam_name')
         if exam_name:
             try:
@@ -129,20 +246,30 @@ def t_marks_list(request, assign_id):
                     defaults={'status': False}
                 )
                 if created:
-                    messages.success(request, _('Exam "%(exam_name)s" was created successfully!') % {'exam_name': exam_name})
+                    messages.success(request, _('Bài kiểm tra "%(exam_name)s" đã được tạo thành công!') % {'exam_name': exam_name})
                 else:
-                    messages.warning(request, _('Exam "%(exam_name)s" already exists!') % {'exam_name': exam_name})
+                    messages.warning(request, _('Bài kiểm tra "%(exam_name)s" đã tồn tại!') % {'exam_name': exam_name})
             except Exception as e:
-                messages.error(request, _('Error while creating exam: %(error)s') % {'error': str(e)})
+                messages.error(request, _('Lỗi khi tạo bài kiểm tra: %(error)s') % {'error': str(e)})
         else:
-            messages.error(request, _('Please enter the exam name!'))
+            messages.error(request, _('Vui lòng nhập tên bài kiểm tra!'))
     
         return redirect('t_marks_list', assign_id=assign_id)
+    
+    from utils.constant import TEST_NAME_CHOICES
+    
+    # Thống kê bài kiểm tra
+    total_exams = exam_sessions_list.count()
+    completed_exams = exam_sessions_list.filter(status=True).count()
+    pending_exams = total_exams - completed_exams
     
     context = {
         'assignment': assignment,
         'm_list': exam_sessions_list,
-        'exam_names': TEST_NAME_CHOICES
+        'exam_names': TEST_NAME_CHOICES,
+        'total_exams': total_exams,
+        'completed_exams': completed_exams,
+        'pending_exams': pending_exams,
     }
     return render(request, 't_marks_list.html', context)
 
@@ -158,17 +285,51 @@ def t_marks_entry(request, marks_c_id):
         subject = assignment.subject
         class_obj = assignment.class_id
 
-        # Lấy các học sinh đang học môn này trong lớp này
-        students_in_subject = StudentSubject.objects.filter(
-            subject=subject,
-            student__class_id=class_obj
-        ).select_related('student')
+        # Debug removed
+        
+        # Lấy tất cả học sinh trong lớp này
+        all_students_in_class = class_obj.student_set.all().order_by('name')
+        
+        # Pagination for student list
+        from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+        students_total = all_students_in_class.count()
+        paginator = Paginator(all_students_in_class, 20)  # 20 students per page
+        page = request.GET.get('page')
+        try:
+            students_page = paginator.page(page)
+        except PageNotAnInteger:
+            students_page = paginator.page(1)
+        except EmptyPage:
+            students_page = paginator.page(paginator.num_pages)
+
+        # Prefill current marks for each student (if any)
+        for student in students_page:
+            # Kiểm tra xem học sinh có đăng ký môn học này không
+            try:
+                student_subject = StudentSubject.objects.get(
+                    student=student,
+                    subject=subject
+                )
+                latest_mark = (
+                    student_subject.marks_set
+                    .filter(name=exam_session.name)
+                    .order_by('-id')
+                    .first()
+                )
+                student.current_mark = latest_mark.marks1 if latest_mark else 0
+                student.is_registered = True
+            except StudentSubject.DoesNotExist:
+                student.current_mark = 0
+                student.is_registered = False
 
         context = {
             'ass': assignment,
             'c': class_obj,
             'mc': exam_session,
-            'students_in_subject': students_in_subject,
+            'students_total': students_total,
+            'students_page': students_page,
+            'dept1': class_obj.dept,  # Thêm dept1 cho template
+            'is_edit_mode': False,
         }
         return render(request, 't_marks_entry.html', context)
 
@@ -185,20 +346,20 @@ def marks_confirm(request, marks_c_id):
         subject = assignment.subject
         class_object = assignment.class_id
 
-        students_in_subject = StudentSubject.objects.filter(
-            subject=subject,
-            student__class_id=class_object
-        ).select_related('student')
-
-        for student_subject in students_in_subject:
-            student = student_subject.student
-            student_mark = request.POST[student.USN]
-            student_subject = StudentSubject.objects.get(
-                subject=subject, student=student)
-            marks_instance, _ = student_subject.marks_set.get_or_create(
-                name=exam_session.name)
-            marks_instance.marks1 = student_mark
-            marks_instance.save()
+        # Chỉ xử lý điểm cho những học sinh đã đăng ký môn học
+        for student in class_object.student_set.all():
+            student_mark = request.POST.get(student.USN)
+            if student_mark is not None:  # Chỉ xử lý nếu có điểm được gửi
+                try:
+                    student_subject = StudentSubject.objects.get(
+                        subject=subject, student=student)
+                    marks_instance, _ = student_subject.marks_set.get_or_create(
+                        name=exam_session.name)
+                    marks_instance.marks1 = student_mark
+                    marks_instance.save()
+                except StudentSubject.DoesNotExist:
+                    # Bỏ qua học sinh chưa đăng ký môn học
+                    continue
         exam_session.status = True
         exam_session.save()
 
@@ -213,29 +374,56 @@ def marks_confirm(request, marks_c_id):
 def edit_marks(request, marks_c_id):
     with transaction.atomic():
         exam_session = get_object_or_404(ExamSession, id=marks_c_id)
-        subject = exam_session.assign.subject
-        class_object = exam_session.assign.class_id
+        # Reuse t_marks_entry UI with prefilled marks
+        assignment = exam_session.assign
+        subject = assignment.subject
+        class_object = assignment.class_id
 
-        # Lấy các StudentSubject của học sinh thuộc lớp này và đăng ký môn này
-        students_in_subject = StudentSubject.objects.filter(
-            subject=subject,
-            student__class_id=class_object
-        ).select_related('student')
+        # Lấy tất cả học sinh trong lớp này
+        all_students_in_class = class_object.student_set.all().order_by('name')
 
-        marks_list = []
-        for student_subject in students_in_subject:
+        # Pagination
+        from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+        students_total = all_students_in_class.count()
+        paginator = Paginator(all_students_in_class, 20)
+        page = request.GET.get('page')
+        try:
+            students_page = paginator.page(page)
+        except PageNotAnInteger:
+            students_page = paginator.page(1)
+        except EmptyPage:
+            students_page = paginator.page(paginator.num_pages)
+
+        # Prefill marks
+        for student in students_page:
+            # Kiểm tra xem học sinh có đăng ký môn học này không
             try:
-                marks_instance = student_subject.marks_set.get(
-                    name=exam_session.name)
-                marks_list.append(marks_instance)
-            except Marks.DoesNotExist:
-                # Bỏ qua hoặc xử lý trường hợp không có điểm
-                pass
+                student_subject = StudentSubject.objects.get(
+                    student=student,
+                    subject=subject
+                )
+                latest_mark = (
+                    student_subject.marks_set
+                    .filter(name=exam_session.name)
+                    .order_by('-id')
+                    .first()
+                )
+                student.current_mark = latest_mark.marks1 if latest_mark else 0
+                student.is_registered = True
+            except StudentSubject.DoesNotExist:
+                student.current_mark = 0
+                student.is_registered = False
+
         context = {
+            'ass': assignment,
+            'c': class_object,
             'mc': exam_session,
-            'm_list': marks_list,
+            'students_total': students_total,
+            'students_page': students_page,
+            'dept1': class_object.dept,
+            'is_edit_mode': True,
         }
-        return render(request, 'edit_marks.html', context)
+        return render(request, 't_marks_entry.html', context)
 
 
 @login_required()
@@ -719,3 +907,86 @@ def t_report(request, assign_id):
     }
     
     return render(request, 't_report.html', context)
+
+@login_required
+def view_students(request, assign_id):
+    """
+    View danh sách sinh viên và điểm tổng của họ trong một assignment
+    """
+    assignment = get_object_or_404(Assign, id=assign_id)
+    
+    # Kiểm tra xem user hiện tại có phải là giáo viên của assignment này không
+    if hasattr(assignment.teacher, 'user') and assignment.teacher.user and assignment.teacher.user != request.user:
+        messages.error(request, _('Bạn không có quyền truy cập assignment này!'))
+        return redirect('teacher_dashboard')
+    
+    # Lấy danh sách sinh viên trong lớp
+    students = assignment.class_id.student_set.all().order_by('name')
+    
+    # Lấy thông tin điểm và điểm danh cho từng sinh viên
+    students_data = []
+    for student in students:
+        # Kiểm tra xem sinh viên có đăng ký môn học này không
+        try:
+            student_subject = StudentSubject.objects.get(
+                student=student,
+                subject=assignment.subject
+            )
+            
+            # Lấy tất cả điểm của sinh viên
+            marks = student_subject.marks_set.all().order_by('name')
+            total_marks = sum(mark.marks1 for mark in marks)
+            
+            # Lấy thông tin điểm danh
+            attendance_records = Attendance.objects.filter(
+                student=student,
+                subject=assignment.subject
+            )
+            total_classes = attendance_records.count()
+            attended_classes = attendance_records.filter(status=True).count()
+            attendance_percentage = round((attended_classes / total_classes * 100), 2) if total_classes > 0 else 0
+            
+            # Tính CIE
+            marks_list = [mark.marks1 for mark in marks]
+            cie_score = math.ceil(sum(marks_list[:CIE_CALCULATION_LIMIT]) / CIE_DIVISOR) if marks_list else 0
+            
+        except StudentSubject.DoesNotExist:
+            # Sinh viên chưa đăng ký môn học
+            marks = []
+            total_marks = 0
+            attendance_percentage = 0
+            cie_score = 0
+            total_classes = 0
+            attended_classes = 0
+        
+        students_data.append({
+            'student': student,
+            'marks': marks,
+            'total_marks': total_marks,
+            'attendance_percentage': attendance_percentage,
+            'cie_score': cie_score,
+            'total_classes': total_classes,
+            'attended_classes': attended_classes,
+            'is_registered': hasattr(locals(), 'student_subject'),
+        })
+    
+    # Pagination
+    from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+    paginator = Paginator(students_data, 25)  # 25 students per page
+    page = request.GET.get('page')
+    try:
+        students_page = paginator.page(page)
+    except PageNotAnInteger:
+        students_page = paginator.page(1)
+    except EmptyPage:
+        students_page = paginator.page(paginator.num_pages)
+    
+    context = {
+        'assignment': assignment,
+        'students_page': students_page,
+        'students_total': len(students_data),
+        'class_obj': assignment.class_id,
+        'subject': assignment.subject,
+    }
+    
+    return render(request, 't_view_students.html', context)

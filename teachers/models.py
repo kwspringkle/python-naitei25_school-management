@@ -96,9 +96,12 @@ class Marks(models.Model):
         max_length=TEST_NAME_MAX_LENGTH, choices=TEST_NAME_CHOICES, default=TEST_NAME_CHOICES[FIRST_CHOICE_INDEX][FIRST_CHOICE_INDEX])
     marks1 = models.IntegerField(default=DEFAULT_MARKS_VALUE, validators=[
                                  MinValueValidator(MIN_MARKS_VALUE), MaxValueValidator(MAX_MARKS_VALUE)])
+    # Thêm phân biệt theo năm học/kỳ để không trộn điểm giữa các kỳ
+    academic_year = models.CharField(max_length=20, default="2024-2025")
+    semester = models.IntegerField(default=1)
 
     class Meta:
-        unique_together = (('student_subject', 'name'),)
+        unique_together = (('student_subject', 'name', 'academic_year', 'semester'),)
 
     @property
     def total_marks(self):
