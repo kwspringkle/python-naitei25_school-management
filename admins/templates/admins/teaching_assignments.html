@@ -2,7 +2,9 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{% trans "Teaching Assignment Management" %} - Admin Dashboard{% endblock %}
+{% block title %}
+  {% trans "Teaching Assignment Management" %} - Admin Dashboard
+{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'admins/css/admin-custom.css' %}">
@@ -10,197 +12,204 @@
 <link rel="stylesheet" href="{% static 'admins/css/teaching_assignments.css' %}">
 
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <!-- Page Header -->
-            <div class="d-sm-flex align-items-center justify-content-between mb-4 m-8">
-                <div class="d-flex align-items-center">
-                    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary mr-3">
-                        <i class="fas fa-arrow-left mr-2"></i>
-                        {% trans "Back to Dashboard" %}
-                    </a>
-                    <h1 class="h3 text-gray-800">
-                        <i class="fas fa-chalkboard-teacher text-primary mr-2"></i>
-                        {% trans "Teaching Assignment Management" %}
-                    </h1>
-                </div>
-                <div class="d-flex justify-content-between m-4">
-                    <span class="badge badge-primary mr-2">
-                        <i class="fas fa-list"></i>
-                        {% blocktrans count counter=assignments|length %}
-                            Total Assignments: {{ counter }}
-                        {% plural %}
-                            Total Assignments: {{ counter }}
-                        {% endblocktrans %}
-                    </span>
-                    <a href="{% url 'add_teaching_assignment' %}" class="btn btn-primary">
-                        <i class="fas fa-plus mr-2"></i>{% trans "Add New Assignment" %}
-                    </a>
-                </div>
-            </div>
-
-            <!-- Filter Form -->
-            <div class="card shadow mb-4 m-8">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between fa-2x m-4">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-filter mr-2"></i>{% trans "Filter Options" %}
-                    </h6>
-                </div>
-                <div class="card-body m-8">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label font-weight-bold text-gray-700">{{ filter_form.teacher.label }}</label>
-                            {{ filter_form.teacher }}
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label font-weight-bold text-gray-700">{{ filter_form.subject.label }}</label>
-                            {{ filter_form.subject }}
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label font-weight-bold text-gray-700">{{ filter_form.class_id.label }}</label>
-                            {{ filter_form.class_id }}
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary mr-2">
-                                <i class="fas fa-search mr-1"></i>{% trans "Filter" %}
-                            </button>
-                            <a href="{% url 'teaching_assignments' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times mr-1"></i>{% trans "Clear" %}
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Assignments Table -->
-            <div class="card shadow mb-4 m-8">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-table mr-2"></i>{% trans "Teaching Assignment List" %}
-                    </h6>
-                    <div class="dropdown no-arrow">
-                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                            aria-labelledby="dropdownMenuLink">
-                            <div class="dropdown-header">{% trans "Options" %}:</div>
-                            <a class="dropdown-item" href="#"><i class="fas fa-download mr-2"></i>{% trans "Export Excel" %}</a>
-                            <a class="dropdown-item" href="#"><i class="fas fa-print mr-2"></i>{% trans "Print Report" %}</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#"><i class="fas fa-eye mr-2"></i>{% trans "View Details" %}</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    {% if assignments %}
-                        <div class="table-responsive m-4">
-                            <table class="table table-bordered table-hover w-auto" id="assignmentsTable" width="100%" cellspacing="0">
-                                <thead class="thead-dark">
-                                    <tr>
-                                        <th style="width: 5%">
-                                            <i class="fas fa-hashtag mr-1"></i>
-                                            {% trans "No." %}
-                                        </th>
-                                        <th style="width: 25%">
-                                            <i class="fas fa-user-tie mr-1"></i>
-                                            {% trans "Teacher" %}
-                                        </th>
-                                        <th style="width: 25%">
-                                            <i class="fas fa-book mr-1"></i>
-                                            {% trans "Subject" %}
-                                        </th>
-                                        <th style="width: 20%">
-                                            <i class="fas fa-graduation-cap mr-1"></i>
-                                            {% trans "Class" %}
-                                        </th>
-                                        <th style="width: 15%">
-                                            <i class="fas fa-building mr-1"></i>
-                                            {% trans "Department" %}
-                                        </th>
-                                        <th style="width: 10%">
-                                            <i class="fas fa-cogs mr-1"></i>
-                                            {% trans "Actions" %}
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for assignment in assignments %}
-                                    <tr>
-                                        <td class="font-weight-bold text-primary">
-                                            {{ forloop.counter }}
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center mr-3">
-                                                    <span class="text-white font-weight-bold">{{ assignment.teacher.name|first|upper }}</span>
-                                                </div>
-                                                <div>
-                                                    <div class="font-weight-bold">{{ assignment.teacher.name }}</div>
-                                                    <small class="text-muted">{{ assignment.teacher.id }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm bg-success rounded-circle d-flex align-items-center justify-content-center mr-3">
-                                                    <span class="text-white font-weight-bold">{{ assignment.subject.shortname|first|upper }}</span>
-                                                </div>
-                                                <div>
-                                                    <div class="font-weight-bold">{{ assignment.subject.name }}</div>
-                                                    <small class="text-muted">{{ assignment.subject.shortname }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-info badge-lg">
-                                                <i class="fas fa-graduation-cap mr-1"></i>
-                                                {{ assignment.class_id }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-secondary">
-                                                <i class="fas fa-building mr-1"></i>
-                                                {{ assignment.class_id.dept.name }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{% url 'edit_teaching_assignment' assignment.id %}" 
-                                                   class="btn btn-outline-primary" title="{% trans 'Edit' %}">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="{% url 'delete_teaching_assignment' assignment.id %}" 
-                                                   class="btn btn-outline-danger"onclick="return confirm('{% trans 'Are you sure you want to delete this assignment?' %}')"
-                                                   title="{% trans 'Delete' %}">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <div class="text-muted">
-                                <i class="fas fa-inbox fa-3x mb-3"></i>
-                                <h5>{% trans "No teaching assignments found" %}</h5>
-                                <p>{% trans "Please add your first teaching assignment" %}</p>
-                                <a href="{% url 'add_teaching_assignment' %}" class="btn btn-primary">
-                                    <i class="fas fa-plus mr-2"></i>{% trans "Add Assignment" %}
-                                </a>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+  <div class="row">
+    <div class="col-12">
+      
+      <!-- Page Header -->
+      <div class="d-sm-flex align-items-center justify-content-between mb-4 m-8">
+        <div class="d-flex align-items-center">
+          <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary mr-3">
+            <i class="fas fa-arrow-left mr-2"></i>
+            {% trans "Back to Dashboard" %}
+          </a>
+          <h1 class="h3 text-gray-800">
+            <i class="fas fa-chalkboard-teacher text-primary mr-2"></i>
+            {% trans "Teaching Assignment Management" %}
+          </h1>
         </div>
+        <div class="d-flex justify-content-between m-4">
+          <span class="badge badge-primary mr-2">
+            <i class="fas fa-list"></i>
+            {% blocktrans count counter=assignments|length %}
+              Total Assignments: {{ counter }}
+            {% plural %}
+              Total Assignments: {{ counter }}
+            {% endblocktrans %}
+          </span>
+          <a href="{% url 'add_teaching_assignment' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>
+            {% trans "Add New Assignment" %}
+          </a>
+        </div>
+      </div>
+
+      <!-- Filter Form -->
+      <div class="card shadow mb-4 m-8">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between fa-2x m-4">
+          <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-filter mr-2"></i>{% trans "Filter Options" %}
+          </h6>
+        </div>
+        <div class="card-body m-8">
+          <form method="get" class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label font-weight-bold text-gray-700">{{ filter_form.teacher.label }}</label>
+              {{ filter_form.teacher }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label font-weight-bold text-gray-700">{{ filter_form.subject.label }}</label>
+              {{ filter_form.subject }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label font-weight-bold text-gray-700">{{ filter_form.class_id.label }}</label>
+              {{ filter_form.class_id }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label font-weight-bold text-gray-700">{{ filter_form.academic_year.label }}</label>
+              {{ filter_form.academic_year }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label font-weight-bold text-gray-700">{{ filter_form.semester.label }}</label>
+              {{ filter_form.semester }}
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary mr-2">
+                <i class="fas fa-search mr-1"></i>{% trans "Filter" %}
+              </button>
+              <a href="{% url 'teaching_assignments' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-times mr-1"></i>{% trans "Clear" %}
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Assignments Table -->
+      <div class="card shadow mb-4 m-8">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-table mr-2"></i>{% trans "Teaching Assignment List" %}
+          </h6>
+          <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+              <div class="dropdown-header">{% trans "Options" %}:</div>
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-download mr-2"></i>{% trans "Export Excel" %}
+              </a>
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-print mr-2"></i>{% trans "Print Report" %}
+              </a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-eye mr-2"></i>{% trans "View Details" %}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          {% if assignments %}
+            <div class="table-responsive m-4">
+              <table class="table table-bordered table-hover w-auto" id="assignmentsTable" width="100%" cellspacing="0">
+                <thead class="thead-dark">
+                  <tr>
+                    <th style="width: 5%"><i class="fas fa-hashtag mr-1"></i>{% trans "No." %}</th>
+                    <th style="width: 25%"><i class="fas fa-user-tie mr-1"></i>{% trans "Teacher" %}</th>
+                    <th style="width: 25%"><i class="fas fa-book mr-1"></i>{% trans "Subject" %}</th>
+                    <th style="width: 20%"><i class="fas fa-graduation-cap mr-1"></i>{% trans "Class" %}</th>
+                    <th style="width: 15%"><i class="fas fa-building mr-1"></i>{% trans "Department" %}</th>
+                    <th style="width: 10%"><i class="fas fa-calendar mr-1"></i>{% trans "Year" %}</th>
+                    <th style="width: 8%"><i class="fas fa-layer-group mr-1"></i>{% trans "Sem" %}</th>
+                    <th style="width: 10%"><i class="fas fa-cogs mr-1"></i>{% trans "Actions" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for assignment in assignments %}
+                    <tr>
+                      <td class="font-weight-bold text-primary">{{ forloop.counter }}</td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center mr-3">
+                            <span class="text-white font-weight-bold">{{ assignment.teacher.name|first|upper }}</span>
+                          </div>
+                          <div>
+                            <div class="font-weight-bold">{{ assignment.teacher.name }}</div>
+                            <small class="text-muted">{{ assignment.teacher.id }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar-sm bg-success rounded-circle d-flex align-items-center justify-content-center mr-3">
+                            <span class="text-white font-weight-bold">{{ assignment.subject.shortname|first|upper }}</span>
+                          </div>
+                          <div>
+                            <div class="font-weight-bold">{{ assignment.subject.name }}</div>
+                            <small class="text-muted">{{ assignment.subject.shortname }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge badge-info badge-lg">
+                          <i class="fas fa-graduation-cap mr-1"></i>
+                          {{ assignment.class_id }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge badge-secondary">
+                          <i class="fas fa-building mr-1"></i>
+                          {{ assignment.class_id.dept.name }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge badge-light">
+                          {{ assignment.year_sem|default:assignment.academic_year }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge badge-info">{{ assignment.semester }}</span>
+                      </td>
+                      <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                          <a href="{% url 'edit_teaching_assignment' assignment.id %}" 
+                             class="btn btn-outline-primary" title="{% trans 'Edit' %}">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <a href="{% url 'delete_teaching_assignment' assignment.id %}" 
+                             class="btn btn-outline-danger"
+                             onclick="return confirm('{% trans 'Are you sure you want to delete this assignment?' %}')"
+                             title="{% trans 'Delete' %}">
+                            <i class="fas fa-trash"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-4">
+              <div class="text-muted">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h5>{% trans "No teaching assignments found" %}</h5>
+                <p>{% trans "Please add your first teaching assignment" %}</p>
+                <a href="{% url 'add_teaching_assignment' %}" class="btn btn-primary">
+                  <i class="fas fa-plus mr-2"></i>{% trans "Add Assignment" %}
+                </a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script src="{% static 'admins/js/teaching_assignments.js' %}"></script>
-
 {% endblock %}
