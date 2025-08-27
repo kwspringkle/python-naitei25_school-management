@@ -3,7 +3,70 @@
 
 {% block content %}
 <h1>{% trans "List of Classes" %}</h1>
+
+<!-- Filter Form -->
 <div class="card mb-3">
+  <div class="card-header">
+    <h5 class="mb-0">{% trans "Filter by Semester" %}</h5>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-4">
+        <label for="semester" class="form-label">{% trans "Semester" %}</label>
+        <select name="semester" id="semester" class="form-control">
+          <option value="">{% trans "All Semesters" %}</option>
+          {% for sem_option in available_semesters %}
+            <option value="{{ sem_option }}" {% if sem_option == selected_semester %}selected{% endif %}>
+              {% trans "Semester" %} {{ sem_option }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="academic_year" class="form-label">{% trans "Academic Year" %}</label>
+        <select name="academic_year" id="academic_year" class="form-control">
+          <option value="">{% trans "All Years" %}</option>
+          {% for year_option in available_years %}
+            <option value="{{ year_option }}" {% if year_option == selected_academic_year %}selected{% endif %}>
+              {{ year_option }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary me-2">
+          <i class="fas fa-search"></i> {% trans "Filter" %}
+        </button>
+        <a href="{% url 't_clas' teacher1.id choice %}" class="btn btn-outline-secondary">
+          <i class="fas fa-times"></i> {% trans "Clear" %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      {% if selected_semester or selected_academic_year %}
+        {% trans "Filtered Classes" %}
+        {% if selected_academic_year and selected_semester %}
+          - {% trans "Year" %} {{ selected_academic_year }}, {% trans "Semester" %} {{ selected_semester }}
+        {% elif selected_academic_year %}
+          - {% trans "Year" %} {{ selected_academic_year }}
+        {% elif selected_semester %}
+          - {% trans "Semester" %} {{ selected_semester }}
+        {% endif %}
+      {% else %}
+        {% trans "All Classes" %}
+      {% endif %}
+    </h5>
+    {% if selected_semester or selected_academic_year %}
+      <span class="badge bg-info">
+        <i class="fas fa-filter"></i> {% trans "Filtered" %}
+      </span>
+    {% endif %}
+  </div>
   <div class="card-body">
     <div class="table-responsive">
       <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
@@ -16,11 +79,11 @@
           </tr>
         </thead>
         <tbody>
-          {% for ass in teacher1.assign_set.all %}
+          {% for ass in assignments %}
           <tr>
             <td>{{ ass.class_id }}</td>
             <td>{{ ass.subject }}</td>
-            <td><span class="badge badge-primary">{% trans "Semester" %} {{ ass.class_id.sem }}</span></td>
+            <td><span class="badge badge-primary">{% trans "Semester" %} {{ ass.year_sem }}</span></td>
             <td>
               {% if choice == 1 %}
               <a class="btn btn-primary" href="{% url 't_class_date' ass.id %}" role="button">{% trans "Enter Attendance" %}</a>
@@ -35,7 +98,29 @@
             </td>
           </tr>
           {% empty %}
-          <p>{% trans "teacher has no courses" %}</p>
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">
+              <i class="fas fa-search fa-2x mb-3 d-block text-secondary"></i>
+              {% if selected_semester or selected_academic_year %}
+                <h6>{% trans "No classes found with current filters" %}</h6>
+                <p class="mb-3">
+                  {% if selected_academic_year and selected_semester %}
+                    {% trans "No classes found for year" %} {{ selected_academic_year }}, {% trans "Semester" %} {{ selected_semester }}
+                  {% elif selected_academic_year %}
+                    {% trans "No classes found containing year" %} {{ selected_academic_year }}
+                  {% elif selected_semester %}
+                    {% trans "No classes found for semester" %} {{ selected_semester }}
+                  {% endif %}
+                </p>
+                <a href="{% url 't_clas' teacher1.id choice %}" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-times"></i> {% trans "Clear Filters" %}
+                </a>
+              {% else %}
+                <h6>{% trans "No classes assigned" %}</h6>
+                <p>{% trans "This teacher has no courses assigned." %}</p>
+              {% endif %}
+            </td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>
