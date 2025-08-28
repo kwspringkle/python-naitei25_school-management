@@ -34,8 +34,8 @@ class AttendanceClassAdmin(admin.ModelAdmin):
 
 @admin.register(Marks)
 class MarksAdmin(admin.ModelAdmin):
-    list_display = ['student_subject', 'name', 'marks1', 'total_marks']
-    list_filter = ['name']
+    list_display = ['student_subject', 'name', 'marks1', 'academic_year', 'semester', 'total_marks']
+    list_filter = ['name', 'academic_year', 'semester']
     search_fields = ['student_subject__student__name',
                      'student_subject__subject__name']
 

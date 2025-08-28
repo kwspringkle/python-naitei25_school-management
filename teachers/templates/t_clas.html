@@ -2,6 +2,7 @@
 {% load i18n %}
 
 {% block content %}
+
 <h1>{% trans "List of Classes" %}</h1>
 
 <!-- Filter Form -->
@@ -23,6 +24,11 @@
         </select>
       </div>
       <div class="col-md-4">
+        <label for="semester" class="form-label">Semester</label>
+        <select name="semester" id="semester" class="form-control">
+          <option value="">-- All --</option>
+          {% for sem in semesters %}
+            <option value="{{ sem }}" {% if selected_semester_int == sem %}selected{% endif %}>{{ sem }}</option>
         <label for="academic_year" class="form-label">{% trans "Academic Year" %}</label>
         <select name="academic_year" id="academic_year" class="form-control">
           <option value="">{% trans "All Years" %}</option>
@@ -35,6 +41,10 @@
       </div>
       <div class="col-md-4 d-flex align-items-end">
         <button type="submit" class="btn btn-primary me-2">
+          <i class="fas fa-search mr-2"></i>Search
+        </button>
+        <a href="{% url 't_clas' teacher1.id choice %}" class="btn btn-secondary">
+          <i class="fas fa-redo mr-2"></i>Reset
           <i class="fas fa-search"></i> {% trans "Filter" %}
         </button>
         <a href="{% url 't_clas' teacher1.id choice %}" class="btn btn-outline-secondary">
@@ -46,6 +56,9 @@
 </div>
 
 <div class="card mb-3">
+  <div class="card-header">
+    <i class="fas fa-table"></i>
+    <b>List of Courses</b>
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">
       {% if selected_semester or selected_academic_year %}
@@ -69,17 +82,48 @@
   </div>
   <div class="card-body">
     <div class="table-responsive">
-      <table class="table table-bordered text-center" id="dataTable" width="100%" cellspacing="0">
+      <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
         <thead>
           <tr>
-            <th>{% trans "Class" %}</th>
-            <th>{% trans "Course" %}</th>
-            <th>{% trans "Semester" %}</th>
+            <th>Class</th>
+            <th>Course</th>
+            <th>Semester</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for ass in assignments %}
+            <tr>
+              <td>{{ ass.class_id.dept.name }} : {{ ass.class_id.sem }} {{ ass.class_id.section }}</td>
+              <td>{{ ass.subject.name }}</td>
+              <td>
+                <span class="badge bg-info">
+                  <i class="fas fa-calendar"></i> {{ ass.year_sem }}
+                </span>
+              </td>
+              <td>
+                {% if choice == 1 %}
+                  <a class="btn btn-primary btn-sm" href="{% url 't_class_date' ass.id %}" role="button">
+                    <i class="fas fa-check mr-1"></i>Enter Attendance
+                  </a>
+                {% elif choice == 2 %}
+                  <a class="btn btn-primary btn-sm" href="{% url 't_marks_list' ass.id %}" role="button">
+                    <i class="fas fa-pen mr-1"></i>Enter Marks
+                  </a>
+                  <a class="btn btn-info btn-sm" href="{% url 'view_students' ass.id %}">
+                    <i class="fas fa-users mr-1"></i>View Students
+                  </a>
+                {% elif choice == 3 %}
+                  <a class="btn btn-warning btn-sm" href="{% url 't_report' ass.id %}">
+                    <i class="fas fa-chart-bar mr-1"></i>Generate Reports
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center">No courses available</td>
+            </tr>
           <tr>
             <td>{{ ass.class_id }}</td>
             <td>{{ ass.subject }}</td>
@@ -125,5 +169,52 @@
         </tbody>
       </table>
     </div>
+
+    {% if assignments.has_other_pages %}
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+          <span class="text-muted">
+            Showing {{ assignments.start_index }} to {{ assignments.end_index }} of {{ assignments.paginator.count }} entries
+          </span>
+        </div>
+        <nav aria-label="Page navigation">
+          <ul class="pagination pagination-sm mb-0">
+            {% if assignments.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if selected_year %}academic_year={{ selected_year }}&{% endif %}{% if selected_semester %}semester={{ selected_semester }}&{% endif %}page={{ assignments.previous_page_number }}">Previous</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+              </li>
+            {% endif %}
+
+            {% for num in assignments.paginator.page_range %}
+              {% if num == assignments.number %}
+                <li class="page-item active">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+              {% elif num > assignments.number|add:'-3' and num < assignments.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?{% if selected_year %}academic_year={{ selected_year }}&{% endif %}{% if selected_semester %}semester={{ selected_semester }}&{% endif %}page={{ num }}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if assignments.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if selected_year %}academic_year={{ selected_year }}&{% endif %}{% if selected_semester %}semester={{ selected_semester }}&{% endif %}page={{ assignments.next_page_number }}">Next</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">Next</span>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% endif %}
   </div>
-  {% endblock %}
+</div>
+
+{% endblock %}

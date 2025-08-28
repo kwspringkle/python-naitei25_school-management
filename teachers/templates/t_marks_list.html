@@ -2,84 +2,197 @@
 {% load i18n %}
 
 {% block content %}
-<!-- Create New Exam Section -->
-<div class="card mb-3">
-    <div class="card-header">
-        <i class="fas fa-plus"></i>
-        <b>{% trans "Tạo bài kiểm tra mới" %}</b>
-    </div>
-    <div class="card-body">
-        <form method="post" class="row">
-            {% csrf_token %}
-            <div class="col-md-6">
-                <label for="exam_name" class="form-label">{% trans "Loại bài kiểm tra" %}</label>
-                <select name="exam_name" id="exam_name" class="form-control" required>
-                    <option value="">-- Chọn loại bài kiểm tra --</option>
-                    {% for exam_code, exam_name in exam_names %}
-                        <option value="{{ exam_code }}">{{ exam_name }}</option>
-                    {% endfor %}
-                </select>
+<style>
+  .info-item {
+    text-align: center;
+    padding: 10px;
+  }
+  .info-item i {
+    display: block;
+    margin-bottom: 10px;
+  }
+  .info-item h6 {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  .info-item p {
+    font-size: 1.1em;
+    font-weight: 500;
+  }
+  .card-body .row .col-md-3:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+  }
+</style>
+
+<!-- Header -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card bg-primary text-white">
+      <div class="card-header">
+        <h4 class="mb-0">
+          <i class="fas fa-clipboard-list"></i> {% trans "Quản lý bài kiểm tra" %}
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Khoa -->
+          <div class="col-md-3">
+            <div class="info-item">
+              <i class="fas fa-university fa-2x mb-2"></i>
+              <h6>{% trans "Khoa" %}</h6>
+              <p class="mb-0">{{ assignment.class_id.dept.name }}</p>
             </div>
-            <div class="col-md-6 d-flex align-items-end">
-                <button type="submit" name="create_exam" class="btn btn-primary">
-                    <i class="fas fa-plus mr-2"></i>{% trans "Tạo bài kiểm tra" %}
-                </button>
+          </div>
+          <!-- Lớp học -->
+          <div class="col-md-3">
+            <div class="info-item">
+              <i class="fas fa-users fa-2x mb-2"></i>
+              <h6>{% trans "Lớp học" %}</h6>
+              <p class="mb-0">
+                {{ assignment.class_id.dept.name }} :
+                {{ assignment.class_id.sem }}{{ assignment.class_id.section }}
+              </p>
             </div>
-        </form>
+          </div>
+          <!-- Môn học -->
+          <div class="col-md-3">
+            <div class="info-item">
+              <i class="fas fa-book fa-2x mb-2"></i>
+              <h6>{% trans "Môn học" %}</h6>
+              <p class="mb-0">{{ assignment.subject.name }}</p>
+              <small class="text-white">({{ assignment.subject.shortname }})</small>
+            </div>
+          </div>
+          <!-- Năm học - Kỳ -->
+          <div class="col-md-3">
+            <div class="info-item">
+              <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+              <h6>{% trans "Năm học - Kỳ" %}</h6>
+              <p class="mb-0">{{ assignment.academic_year }}</p>
+              <small class="text-white">
+                {% trans "Học kỳ" %} {{ assignment.semester }} ({{ assignment.year_sem }})
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- Original Exam Sessions Table -->
-<div class="card mb-3">
-      <!-- /.container-fluid -->
-      <!-- Messages -->
-      {% if messages %}
-      <div class="mt-2">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
+<!-- Thống kê -->
+<div class="row mb-3">
+  <!-- Tổng số -->
+  <div class="col-md-4">
+    <div class="card border-info">
+      <div class="card-body text-center">
+        <i class="fas fa-list-alt fa-3x text-info mb-2"></i>
+        <h6>{% trans "Tổng số bài kiểm tra" %}</h6>
+        <h5 class="text-info">{{ total_exams }} {% trans "bài" %}</h5>
       </div>
-      {% endif %}
-    <div class="card-header">
-        <i class="fas fa-table"></i>
-        <b>{% trans "List of Exams" %}</b>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>{% trans "Name" %}</th>
-                        <th>{% trans "Status" %}</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for m in m_list %}
-                    <tr>
-                        <td>{{ m.name }}</td>
-                        {% if not m.status %}
-                        <td class="p-3 mb-2 bg-danger text-white">{% trans "Not Marked" %}</td>
-                        <td>
-                            <a class="btn btn-primary" href="{% url 't_marks_entry' m.id %}" role="button">{% trans "Enter Marks" %}</a>
-                        </td>
-
-                        {% else %}
-                        <td class="p-3 mb-2 bg-success text-white">{% trans "Marked" %}</td>
-                        <td><a class="btn btn-warning" href="{% url 'edit_marks' m.id %}" role="button">{% trans "Edit Marks" %}</a>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% empty %}
-                    <p>{% trans "No exams available" %}</p>
-                    {% endfor %}
-
-                </tbody>
-            </table>
-        </div>
+  </div>
+  <!-- Đã chấm -->
+  <div class="col-md-4">
+    <div class="card border-success">
+      <div class="card-body text-center">
+        <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+        <h6>{% trans "Đã chấm điểm" %}</h6>
+        <h5 class="text-success">{{ completed_exams }} {% trans "bài" %}</h5>
+      </div>
     </div>
+  </div>
+  <!-- Chưa chấm -->
+  <div class="col-md-4">
+    <div class="card border-warning">
+      <div class="card-body text-center">
+        <i class="fas fa-clock fa-3x text-warning mb-2"></i>
+        <h6>{% trans "Chưa chấm điểm" %}</h6>
+        <h5 class="text-warning">{{ pending_exams }} {% trans "bài" %}</h5>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tạo bài kiểm tra -->
+<div class="card mb-3">
+  <div class="card-header">
+    <i class="fas fa-plus"></i> <b>{% trans "Tạo bài kiểm tra mới" %}</b>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row">
+      {% csrf_token %}
+      <div class="col-md-6">
+        <label for="exam_name" class="form-label">{% trans "Loại bài kiểm tra" %}</label>
+        <select name="exam_name" id="exam_name" class="form-control" required>
+          <option value="">-- {% trans "Chọn loại bài kiểm tra" %} --</option>
+          {% for exam_code, exam_name in exam_names %}
+          <option value="{{ exam_code }}">{{ exam_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6 d-flex align-items-end">
+        <button type="submit" name="create_exam" class="btn btn-primary">
+          <i class="fas fa-plus mr-2"></i>{% trans "Tạo bài kiểm tra" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Danh sách bài kiểm tra -->
+<div class="card mb-3">
+  {% if messages %}
+  <div class="mt-2">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="card-header">
+    <i class="fas fa-table"></i> <b>{% trans "Danh sách bài kiểm tra" %}</b>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+      <thead>
+        <tr>
+          <th>{% trans "Name" %}</th>
+          <th>{% trans "Status" %}</th>
+          <th>{% trans "Action" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in m_list %}
+        <tr>
+          <td>{{ m.name }}</td>
+          {% if not m.status %}
+          <td class="p-3 mb-2 bg-danger text-white">{% trans "Chưa chấm điểm" %}</td>
+          <td>
+            <a class="btn btn-primary" href="{% url 't_marks_entry' m.id %}" role="button">
+              <i class="fas fa-pen mr-2"></i>{% trans "Nhập điểm" %}
+            </a>
+          </td>
+          {% else %}
+          <td class="p-3 mb-2 bg-success text-white">{% trans "Đã chấm điểm" %}</td>
+          <td>
+            <a class="btn btn-warning" href="{% url 'edit_marks' m.id %}" role="button">
+              <i class="fas fa-edit mr-2"></i>{% trans "Sửa điểm" %}
+            </a>
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="text-center">{% trans "No exams available" %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

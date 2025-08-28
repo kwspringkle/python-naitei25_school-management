@@ -38,7 +38,8 @@ class Student(models.Model):
 class StudentSubject(models.Model):
     student = models.ForeignKey(Student, on_delete=models.RESTRICT)
     subject = models.ForeignKey(ADMINS_SUBJECT_MODEL, on_delete=models.RESTRICT)
-
+    is_active = models.BooleanField(default=True)
+    
     class Meta:
         unique_together = (('student', 'subject'),)
         verbose_name_plural = MARKS_VERBOSE_NAME_PLURAL
