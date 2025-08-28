@@ -106,7 +106,7 @@ def t_clas(request, teacher_id, choice):
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     
     teacher1 = get_object_or_404(Teacher, id=teacher_id)
-    
+
     # Lấy tất cả assignments của giáo viên (bao gồm cả các kỳ khác nhau)
     assignments = Assign.objects.filter(
         teacher=teacher1
@@ -205,6 +205,72 @@ def t_clas(request, teacher_id, choice):
     
     # Convert selected_semester to int for template comparison
     selected_semester_int = int(selected_semester) if selected_semester and selected_semester.isdigit() else None
+    # Get filter parameters
+    selected_semester = request.GET.get('semester', '')
+    selected_academic_year = request.GET.get('academic_year', '')
+    
+    # Start with all assignments for this teacher
+    assignments = teacher1.assign_set.all()
+    
+    # Apply filters if provided
+    if selected_semester:
+        try:
+            semester_int = int(selected_semester)
+            assignments = assignments.filter(semester=semester_int)
+        except ValueError:
+            pass
+    
+    if selected_academic_year:
+        # Filter assignments where the selected year matches the semester's year
+        # For "2024-2025": semester 1,2,3 -> 2024.X, semester 1,2,3 of next year -> 2025.X
+        from django.db.models import Q
+        
+        # Find assignments where the year should be displayed for the semester
+        year_filter = Q()
+        
+        # For academic years like "2024-2025"
+        # Semester 1: Sep-Jan -> belongs to first year (2024)
+        # Semester 2: Feb-Jun -> belongs to second year (2025) 
+        # Semester 3: Jul-Aug -> belongs to second year (2025)
+        
+        for assignment in teacher1.assign_set.all():
+            academic_year_str = str(assignment.academic_year)
+            import re
+            years = re.findall(r'\b\d{4}\b', academic_year_str)
+            
+            if len(years) >= 2:  # Format like "2024-2025"
+                first_year, second_year = years[0], years[1]
+                
+                # Determine which year this semester belongs to
+                if assignment.semester == 1:
+                    display_year = first_year
+                else:  # semester 2 or 3
+                    display_year = second_year
+                    
+                if display_year == selected_academic_year:
+                    year_filter |= Q(id=assignment.id)
+            else:  # Single year format like "2024"
+                if selected_academic_year in academic_year_str:
+                    year_filter |= Q(id=assignment.id)
+        
+        assignments = assignments.filter(year_filter)
+    
+    # Get available options for dropdowns
+    all_assignments = teacher1.assign_set.all()
+    available_semesters = sorted(set(all_assignments.values_list('semester', flat=True)))
+    
+    # Extract individual years from academic_year strings for dropdown
+    # e.g., "2023-2024" -> [2023, 2024], "2024-2025" -> [2024, 2025]
+    academic_years = all_assignments.values_list('academic_year', flat=True)
+    individual_years = set()
+    for year_str in academic_years:
+        # Use regex to find all 4-digit years in the string
+        import re
+        years_found = re.findall(r'\b\d{4}\b', str(year_str))
+        for year in years_found:
+            individual_years.add(year)
+    
+    available_years = sorted(individual_years)
     
     context = {
         'teacher1': teacher1,
@@ -217,6 +283,12 @@ def t_clas(request, teacher_id, choice):
         'selected_semester': selected_semester,
         'selected_semester_int': selected_semester_int,
     }
+        'available_semesters': available_semesters,
+        'available_years': available_years,
+        'selected_semester': selected_semester,
+        'selected_academic_year': selected_academic_year,
+    }
+    
     return render(request, 't_clas.html', context)
 
 # Hiển thị danh sách các phiên thi (ExamSession) của một assignment (môn học/lớp/giáo viên).

@@ -3,19 +3,23 @@
 
 {% block content %}
 
+<h1>{% trans "List of Classes" %}</h1>
+
+<!-- Filter Form -->
 <div class="card mb-3">
   <div class="card-header">
-    <i class="fas fa-filter"></i>
-    <b>Filter</b>
+    <h5 class="mb-0">{% trans "Filter by Semester" %}</h5>
   </div>
   <div class="card-body">
-    <form method="get" class="row">
+    <form method="get" class="row g-3">
       <div class="col-md-4">
-        <label for="academic_year" class="form-label">Academic Year</label>
-        <select name="academic_year" id="academic_year" class="form-control">
-          <option value="">-- All --</option>
-          {% for year in academic_years %}
-            <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+        <label for="semester" class="form-label">{% trans "Semester" %}</label>
+        <select name="semester" id="semester" class="form-control">
+          <option value="">{% trans "All Semesters" %}</option>
+          {% for sem_option in available_semesters %}
+            <option value="{{ sem_option }}" {% if sem_option == selected_semester %}selected{% endif %}>
+              {% trans "Semester" %} {{ sem_option }}
+            </option>
           {% endfor %}
         </select>
       </div>
@@ -25,6 +29,13 @@
           <option value="">-- All --</option>
           {% for sem in semesters %}
             <option value="{{ sem }}" {% if selected_semester_int == sem %}selected{% endif %}>{{ sem }}</option>
+        <label for="academic_year" class="form-label">{% trans "Academic Year" %}</label>
+        <select name="academic_year" id="academic_year" class="form-control">
+          <option value="">{% trans "All Years" %}</option>
+          {% for year_option in available_years %}
+            <option value="{{ year_option }}" {% if year_option == selected_academic_year %}selected{% endif %}>
+              {{ year_option }}
+            </option>
           {% endfor %}
         </select>
       </div>
@@ -34,6 +45,10 @@
         </button>
         <a href="{% url 't_clas' teacher1.id choice %}" class="btn btn-secondary">
           <i class="fas fa-redo mr-2"></i>Reset
+          <i class="fas fa-search"></i> {% trans "Filter" %}
+        </button>
+        <a href="{% url 't_clas' teacher1.id choice %}" class="btn btn-outline-secondary">
+          <i class="fas fa-times"></i> {% trans "Clear" %}
         </a>
       </div>
     </form>
@@ -44,6 +59,26 @@
   <div class="card-header">
     <i class="fas fa-table"></i>
     <b>List of Courses</b>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      {% if selected_semester or selected_academic_year %}
+        {% trans "Filtered Classes" %}
+        {% if selected_academic_year and selected_semester %}
+          - {% trans "Year" %} {{ selected_academic_year }}, {% trans "Semester" %} {{ selected_semester }}
+        {% elif selected_academic_year %}
+          - {% trans "Year" %} {{ selected_academic_year }}
+        {% elif selected_semester %}
+          - {% trans "Semester" %} {{ selected_semester }}
+        {% endif %}
+      {% else %}
+        {% trans "All Classes" %}
+      {% endif %}
+    </h5>
+    {% if selected_semester or selected_academic_year %}
+      <span class="badge bg-info">
+        <i class="fas fa-filter"></i> {% trans "Filtered" %}
+      </span>
+    {% endif %}
   </div>
   <div class="card-body">
     <div class="table-responsive">
@@ -89,6 +124,47 @@
             <tr>
               <td colspan="4" class="text-center">No courses available</td>
             </tr>
+          <tr>
+            <td>{{ ass.class_id }}</td>
+            <td>{{ ass.subject }}</td>
+            <td><span class="badge badge-primary">{% trans "Semester" %} {{ ass.year_sem }}</span></td>
+            <td>
+              {% if choice == 1 %}
+              <a class="btn btn-primary" href="{% url 't_class_date' ass.id %}" role="button">{% trans "Enter Attendance" %}</a>
+              {% elif choice == 2 %}
+              <a class="btn btn-primary" href="{% url 't_marks_list' ass.id %}" role="button">
+                {% trans "Enter Marks" %}
+              </a>
+              <a class="btn btn-danger" href="#">{% trans "View Students" %}</a>
+              {% elif choice == 3 %}
+              <a class="btn btn-danger" href="{% url 't_report' ass.id %}">{% trans "Generate reports" %}</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">
+              <i class="fas fa-search fa-2x mb-3 d-block text-secondary"></i>
+              {% if selected_semester or selected_academic_year %}
+                <h6>{% trans "No classes found with current filters" %}</h6>
+                <p class="mb-3">
+                  {% if selected_academic_year and selected_semester %}
+                    {% trans "No classes found for year" %} {{ selected_academic_year }}, {% trans "Semester" %} {{ selected_semester }}
+                  {% elif selected_academic_year %}
+                    {% trans "No classes found containing year" %} {{ selected_academic_year }}
+                  {% elif selected_semester %}
+                    {% trans "No classes found for semester" %} {{ selected_semester }}
+                  {% endif %}
+                </p>
+                <a href="{% url 't_clas' teacher1.id choice %}" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-times"></i> {% trans "Clear Filters" %}
+                </a>
+              {% else %}
+                <h6>{% trans "No classes assigned" %}</h6>
+                <p>{% trans "This teacher has no courses assigned." %}</p>
+              {% endif %}
+            </td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>
